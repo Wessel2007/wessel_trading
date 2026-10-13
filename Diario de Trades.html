@@ -1,0 +1,2379 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e12">
+<title>Wessel Trading</title>
+<meta name="author" content="Luiz Wessel">
+<script>
+// Aplica o tema salvo antes de desenhar a página, para não piscar no tema errado
+try { if (localStorage.getItem('diarioTradesB3.tema') === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e12;
+  --side: #0f1216;
+  --card: #14181e;
+  --card2: #1a1f27;
+  --card3: #212732;
+  --text: #eceef2;
+  --muted: #9aa3b0;
+  --faint: #6c7480;
+  --border: #232a34;
+  --pos: #3ecf8e;
+  --pos-bg: rgba(62,207,142,.11);
+  --neg: #f87171;
+  --neg-bg: rgba(248,113,113,.11);
+  --warn: #f5b84a;
+  --warn-bg: rgba(245,184,74,.11);
+  --accent: #8b7cf6;
+  --accent-soft: rgba(139,124,246,.14);
+  --accent-text: #ffffff;
+  --accent-hover: #9a8cf8;
+  --link-hover: #a99ff9;
+  --chip-dt: #b3a9fa;
+  --alert-border: rgba(248,113,113,.35);
+  --warn-border: rgba(245,184,74,.3);
+  --warn-flag-text: #1a1406;
+  --shadow: rgba(0,0,0,.55);
+  --backdrop: rgba(4,6,9,.7);
+  --av-bg: 45% 22%;
+  --av-fg: 80% 80%;
+  --radius: 18px;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f3f4f8;
+  --side: #ffffff;
+  --card: #ffffff;
+  --card2: #f1f3f7;
+  --card3: #e3e7ee;
+  --text: #171a21;
+  --muted: #566070;
+  --faint: #7d8696;
+  --border: #dde1e9;
+  --pos: #0a8754;
+  --pos-bg: rgba(10,135,84,.11);
+  --neg: #d23232;
+  --neg-bg: rgba(210,50,50,.09);
+  --warn: #9a5f00;
+  --warn-bg: rgba(240,165,30,.17);
+  --accent: #6552e0;
+  --accent-soft: rgba(101,82,224,.11);
+  --accent-hover: #5340cf;
+  --link-hover: #4a38c4;
+  --chip-dt: #5340cf;
+  --alert-border: rgba(210,50,50,.3);
+  --warn-border: rgba(200,130,10,.35);
+  --warn-flag-text: #ffffff;
+  --shadow: rgba(30,40,70,.22);
+  --backdrop: rgba(30,36,50,.45);
+  --av-bg: 70% 90%;
+  --av-fg: 60% 30%;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; } /* sem isso, classes com "display" anulam o atributo hidden */
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 500 14.5px/1.5 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); } a:hover { color: var(--link-hover); }
+.num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -.01em; }
+h1 { font-size: 26px; font-weight: 800; }
+h2 { font-size: 17px; font-weight: 750; }
+h3 { font-size: 15px; font-weight: 700; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+
+/* Estrutura */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.side { background: var(--side); border-right: 1px solid var(--border); padding: 22px 16px; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; padding: 0 8px; }
+.brand .logo { width: 32px; height: 32px; border-radius: 10px; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.brand small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.nav { display: grid; gap: 2px; }
+.nav button { display: flex; align-items: center; gap: 12px; background: none; border: 0; color: var(--muted); font: inherit; font-weight: 650; padding: 10px 12px; border-radius: 12px; cursor: pointer; text-align: left; }
+.nav button svg { width: 19px; height: 19px; flex: none; }
+.nav button:hover { background: var(--card); color: var(--text); }
+.nav button.active { background: var(--accent-soft); color: var(--text); }
+.nav button.active svg { color: var(--accent); }
+.side-foot { margin-top: auto; display: grid; gap: 10px; }
+.btn.tema-btn { justify-content: flex-start; gap: 10px; padding-left: 12px; }
+.btn.tema-btn svg { width: 17px; height: 17px; flex: none; }
+
+.acct { border-radius: 14px; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); display: grid; gap: 4px; }
+.acct .head { display: flex; align-items: center; gap: 8px; font-weight: 750; font-size: 13.5px; }
+.acct .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.acct.ok .head { color: var(--pos); }
+.acct.warn .head { color: var(--warn); }
+.acct.stop { background: var(--neg); border-color: var(--neg); }
+.acct.stop .head, .acct.stop .sub { color: #fff; }
+.acct .sub { font-size: 12px; color: var(--muted); }
+.banner { border-radius: 14px; padding: 12px 14px; background: var(--warn-bg); color: var(--warn); font-size: 12.5px; display: grid; gap: 8px; }
+.banner .btn { justify-self: start; }
+
+.content { min-width: 0; display: flex; flex-direction: column; }
+.pagehead { display: flex; align-items: center; gap: 16px; padding: 28px 36px 6px; flex-wrap: wrap; }
+.pagehead .t { display: grid; gap: 2px; margin-right: auto; }
+.pagehead p { margin: 0; color: var(--muted); }
+.alerta-topo { margin: 14px 36px 0; padding: 14px 18px; border-radius: 14px; background: var(--neg); color: #fff; font-weight: 700; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.alerta-topo span { font-weight: 500; opacity: .92; }
+main { padding: 20px 36px 32px; max-width: 1240px; width: 100%; }
+.tab { display: none; }
+.tab.active { display: grid; gap: 20px; }
+footer { color: var(--faint); font-size: 12px; padding: 0 36px 28px; }
+
+/* Cards */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.card-head .muted { font-size: 13px; }
+.card-head .right { margin-left: auto; }
+.lbl { font-size: 12.5px; color: var(--muted); font-weight: 650; }
+
+/* Herói: patrimônio + equação */
+.hero { padding: 24px; display: grid; gap: 22px; }
+.hero-top { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
+.hero-val { font-size: 40px; font-weight: 800; letter-spacing: -.025em; line-height: 1.1; margin: 6px 0 6px; }
+.hero-top .sub { color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-weight: 750; font-size: 13px; background: var(--card3); }
+.pill.pos { background: var(--pos-bg); }
+.pill.neg { background: var(--neg-bg); }
+.hero-cdi { margin-left: auto; text-align: right; display: grid; gap: 2px; }
+.hero-cdi .v { font-size: 18px; font-weight: 750; }
+.eq { display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1.1fr); align-items: stretch; }
+.eq-item { background: var(--card2); border-radius: 14px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.eq-item.total { background: var(--accent-soft); }
+.eq-item .v { font-size: 22px; font-weight: 800; letter-spacing: -.015em; }
+.eq-item .h { font-size: 12.5px; color: var(--muted); text-wrap: pretty; }
+.eq-op { display: grid; place-items: center; color: var(--faint); font-size: 20px; font-weight: 700; }
+
+/* Botões */
+.btn { font: inherit; font-weight: 700; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); color: var(--text); padding: 9px 16px; cursor: pointer; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:hover { background: var(--card3); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.danger { color: var(--neg); border-color: transparent; background: var(--neg-bg); }
+.btn.ghost { background: none; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover { background: var(--card2); color: var(--text); }
+.btn.big { padding: 12px 22px; font-size: 15px; min-height: 48px; }
+.btn.sm { padding: 5px 11px; min-height: 32px; font-size: 13px; border-radius: 10px; }
+.btn.link { border: 0; background: none; color: var(--accent); padding: 4px 6px; min-height: 0; }
+
+/* Formulários */
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.span2 { grid-column: 1 / -1; }
+label { display: grid; gap: 6px; font-size: 12.5px; font-weight: 650; color: var(--muted); }
+input, select {
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--text); background: var(--card2);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; width: 100%; min-height: 44px;
+}
+input::placeholder { color: var(--faint); font-weight: 500; }
+input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+input[aria-invalid="true"] { border-color: var(--neg); background: var(--neg-bg); }
+.seg { display: inline-flex; border-radius: 12px; padding: 3px; background: var(--card2); border: 1px solid var(--border); gap: 2px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; width: 1px; min-height: 0; }
+.seg label { display: block; padding: 8px 20px; cursor: pointer; color: var(--muted); font-size: 14px; border-radius: 9px; }
+.seg input:checked + label { background: var(--card3); color: var(--text); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); }
+.hint { font-weight: 500; font-size: 12px; color: var(--faint); }
+.preview { color: var(--muted); font-size: 13px; }
+
+/* Listas de posições */
+.list { display: grid; }
+.row { display: grid; grid-template-columns: minmax(200px, 1.5fr) minmax(110px, 1fr) 150px minmax(130px, 1fr) auto; gap: 18px; align-items: center; padding: 14px 4px; border-top: 1px solid var(--border); }
+.row:first-child { border-top: 0; padding-top: 2px; }
+.row.closed { grid-template-columns: minmax(200px, 1.5fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(130px, 1fr) auto; }
+.who { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 12px; flex: none; letter-spacing: .02em; background: hsl(var(--h, 250) var(--av-bg)); color: hsl(var(--h, 250) var(--av-fg)); }
+.tk { font-size: 15.5px; font-weight: 800; letter-spacing: .02em; }
+.who .meta { font-size: 12.5px; color: var(--muted); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.cell .lbl { font-size: 11.5px; font-weight: 650; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
+.cell .v { font-weight: 700; }
+.cell.r { text-align: right; }
+.cell .big { font-size: 17px; font-weight: 800; }
+.row input { min-height: 38px; padding: 7px 10px; }
+.acts { display: flex; gap: 6px; justify-content: flex-end; }
+.chip { font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--card3); color: var(--muted); white-space: nowrap; }
+.chip.red { background: var(--neg-bg); color: var(--neg); }
+.chip.dt { background: var(--accent-soft); color: var(--chip-dt); }
+.chip.sw { background: var(--warn-bg); color: var(--warn); }
+.chip.open { background: var(--pos-bg); color: var(--pos); }
+.empty { padding: 28px; text-align: center; color: var(--muted); display: grid; gap: 12px; justify-items: center; }
+
+.calc { display: grid; gap: 6px; font-size: 14px; background: var(--card2); border-radius: 14px; padding: 14px 16px; }
+.calc div { display: flex; justify-content: space-between; gap: 10px; }
+.calc .tot { font-weight: 800; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; font-size: 15.5px; }
+
+/* Painel */
+.sec { display: grid; gap: 12px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sec-head h2 { font-size: 18px; }
+.sec-head p { margin: 0; color: var(--muted); font-size: 13px; }
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+.kpi .label { font-size: 12.5px; color: var(--muted); font-weight: 650; }
+.kpi .value { font-size: 23px; font-weight: 800; letter-spacing: -.015em; }
+.kpi .hint { font-size: 12.5px; color: var(--muted); text-wrap: pretty; }
+.kpi .flag { justify-self: start; font-size: 11.5px; font-weight: 750; padding: 2px 9px; border-radius: 999px; margin-top: 4px; }
+.kpi.alert { background: var(--neg-bg); border-color: var(--alert-border); }
+.kpi.alert .flag { background: var(--neg); color: #fff; }
+.kpi.warnc { background: var(--warn-bg); border-color: var(--warn-border); }
+.kpi.warnc .flag { background: var(--warn); color: var(--warn-flag-text); }
+.kpi.wide { grid-column: span 2; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.charts { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+.chart-box { position: relative; height: 250px; }
+
+/* Meta do mês */
+.meta-card { display: grid; gap: 12px; }
+.meta-card .card-head { margin-bottom: 0; }
+.meta-bar { height: 12px; border-radius: 999px; background: var(--card3); overflow: hidden; }
+.meta-fill { height: 100%; border-radius: 999px; background: var(--accent); min-width: 0; transition: width .9s cubic-bezier(.2, .7, .2, 1), background-color .3s; }
+.meta-fill.ok { background: var(--pos); }
+.meta-info { display: flex; gap: 6px 18px; flex-wrap: wrap; color: var(--muted); font-size: 13.5px; }
+.meta-info b { color: var(--text); }
+
+/* Tabelas */
+.toolbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.toolbar label { min-width: 150px; flex: 1; max-width: 220px; }
+.toolbar .info { margin-left: auto; color: var(--muted); font-size: 13px; padding-bottom: 12px; }
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card); }
+table.tbl { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.tbl th, .tbl td { padding: 12px 14px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tbl th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); font-weight: 700; background: var(--card); }
+.tbl thead tr.grp th { color: var(--muted); text-align: center; border-bottom: 0; padding-bottom: 0; }
+.tbl thead tr.grp th span { display: block; border-bottom: 2px solid var(--card3); padding-bottom: 6px; }
+.tbl th.l, .tbl td.l { text-align: left; }
+.tbl tbody tr:hover { background: var(--card2); }
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.tbl tfoot td { font-weight: 800; background: var(--card2); border-bottom: 0; }
+.tbl td.first .who { gap: 10px; }
+.tbl td.first .av { width: 30px; height: 30px; font-size: 10px; }
+.tbl .motivo { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.note { padding: 16px 18px; border-radius: 16px; background: var(--card); border: 1px solid var(--border); font-size: 13.5px; display: grid; gap: 6px; }
+
+/* Config */
+.cfg-sec { display: grid; gap: 14px; }
+.cfg-sec + .cfg-sec { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px; }
+.cfg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.input-unit { display: flex; align-items: center; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 0 12px; gap: 6px; }
+.input-unit:focus-within { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.input-unit input { border: 0; background: none; padding: 10px 0; outline: none !important; }
+.input-unit span { color: var(--faint); font-weight: 700; }
+.backup-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.auto-box { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: var(--card2); display: grid; gap: 6px; }
+.auto-box .backup-actions { margin-top: 6px; }
+
+/* Ações cadastradas e primeira configuração */
+.passo { display: grid; gap: 18px; }
+.chips-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 32px; }
+.chip.tag { font-size: 13.5px; padding: 5px 6px 5px 12px; display: inline-flex; align-items: center; gap: 4px; color: var(--text); letter-spacing: .02em; }
+.chip.tag button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; line-height: 1; cursor: pointer; padding: 0 5px; }
+.chip.tag button:hover { color: var(--neg); }
+.add-ativo { display: flex; gap: 10px; margin-top: 12px; max-width: 360px; }
+
+/* Aportes e retiradas, simulador */
+.mov-row { display: grid; grid-template-columns: 96px 84px 130px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
+.mov-row:first-child { border-top: 0; }
+.mov-row .nota { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sim-atalhos { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 860px) { .mov-row { grid-template-columns: 1fr 1fr; } }
+
+/* Diálogo */
+dialog { border: 1px solid var(--border); border-radius: 22px; background: var(--card); color: var(--text); padding: 0; width: min(540px, calc(100vw - 24px)); box-shadow: 0 30px 80px var(--shadow); }
+dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(3px); }
+dialog form { padding: 24px; display: grid; gap: 18px; }
+.dlg-head { display: grid; gap: 4px; }
+.dlg-head h2 { font-size: 20px; }
+.dlg-foot { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+.dlg-foot .left { margin-right: auto; }
+
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: var(--card3); border: 1px solid var(--border); color: var(--text); padding: 12px 18px; border-radius: 14px; font-weight: 650; opacity: 0; transition: .2s; z-index: 100; max-width: calc(100vw - 32px); pointer-events: none; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.bottomnav { display: none; }
+
+@media (max-width: 1100px) {
+  .row, .row.closed { grid-template-columns: minmax(180px, 1.4fr) 140px minmax(110px, 1fr) auto; }
+  .row .cell.inv { display: none; }
+  .cfg-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 860px) {
+  body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  .app { grid-template-columns: 1fr; }
+  .side { position: static; height: auto; flex-direction: row; align-items: center; padding: 12px 16px; flex-wrap: wrap; gap: 12px; }
+  .side .nav { display: none; }
+  .side-foot { margin: 0 0 0 auto; display: flex; }
+  .acct .sub, .banner { display: none; }
+  .pagehead { padding: 18px 16px 0; }
+  .alerta-topo { margin: 12px 16px 0; }
+  main { padding: 16px; }
+  footer { padding: 0 16px 20px; }
+  h1 { font-size: 22px; }
+  .hero-val { font-size: 32px; }
+  .hero-cdi { margin-left: 0; text-align: left; }
+  .eq { grid-template-columns: 1fr; gap: 6px; }
+  .eq-op { height: 16px; }
+  .charts { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .kpi.wide { grid-column: 1 / -1; }
+  .kpi .value { font-size: 19px; }
+  .row, .row.closed { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row .who { grid-column: 1 / -1; }
+  .row .acts { grid-column: 1 / -1; }
+  .cfg-grid { grid-template-columns: 1fr 1fr; }
+  .bottomnav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--side); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
+  .bottomnav button { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; font-weight: 650; display: grid; justify-items: center; gap: 3px; padding: 9px 0 10px; cursor: pointer; }
+  .bottomnav button svg { width: 21px; height: 21px; }
+  .bottomnav button.active { color: var(--accent); }
+  .table-wrap { border: 0; background: none; overflow: visible; }
+  .tbl thead { display: none; }
+  .tbl, .tbl tbody, .tbl tfoot, .tbl tr, .tbl td { display: block; width: 100%; }
+  .tbl tr { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 10px; padding: 8px 4px; }
+  .tbl tbody tr:hover { background: var(--card); }
+  .tbl td { display: flex; justify-content: space-between; gap: 12px; border: 0; padding: 5px 12px; white-space: normal; text-align: right; }
+  .tbl td::before { content: attr(data-label); color: var(--muted); font-size: 13px; text-align: left; }
+  .tbl td.l { text-align: right; }
+  .tbl td.first::before { content: none; }
+  .tbl .motivo { max-width: none; }
+  .tbl tfoot tr { background: var(--card2); }
+  .toolbar label { max-width: none; min-width: 40%; }
+}
+@media (max-width: 420px) {
+  .kpis, .cfg-grid { grid-template-columns: 1fr; }
+  .fgrid { grid-template-columns: 1fr; }
+}
+
+/* Tutorial: camada que bloqueia a página, foco no elemento e balão explicativo */
+.tour { position: fixed; inset: 0; z-index: 200; }
+.tour-foco { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px var(--backdrop), 0 0 0 2px var(--accent); pointer-events: none;
+  transition: top .35s cubic-bezier(.2, .7, .2, 1), left .35s cubic-bezier(.2, .7, .2, 1), width .35s cubic-bezier(.2, .7, .2, 1), height .35s cubic-bezier(.2, .7, .2, 1); }
+.tour-foco.sem-alvo { box-shadow: 0 0 0 9999px var(--backdrop); }
+.tour-balao { position: fixed; width: min(350px, calc(100vw - 24px)); background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px 18px 14px;
+  box-shadow: 0 20px 50px var(--shadow); display: grid; gap: 6px; transition: top .35s cubic-bezier(.2, .7, .2, 1), left .35s cubic-bezier(.2, .7, .2, 1); }
+.tour-balao h3 { font-size: 16.5px; }
+.tour-balao p { margin: 0; color: var(--muted); font-size: 14px; text-wrap: pretty; }
+.tour-passo { font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+.tour-acoes { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.tour-acoes .btn.link { margin-right: auto; padding-left: 0; color: var(--muted); }
+
+/* ---------- Animações ---------- */
+@keyframes subir { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes surgir { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dlg-entra { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes desce { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes pulsa { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(255,255,255,0); } }
+
+/* Entrada das seções ao trocar de aba (só os blocos diretos, que não são redesenhados a cada alteração) */
+.tab.active > * { animation: subir .4s cubic-bezier(.2, .7, .2, 1) both; }
+.tab.active > :nth-child(2) { animation-delay: .06s; }
+.tab.active > :nth-child(3) { animation-delay: .12s; }
+.tab.active > :nth-child(4) { animation-delay: .18s; }
+.tab.active > :nth-child(n+5) { animation-delay: .22s; }
+
+dialog[open] { animation: dlg-entra .24s cubic-bezier(.2, .8, .2, 1); }
+dialog[open]::backdrop { animation: surgir .2s ease-out; }
+.passo:not([hidden]) { animation: subir .28s cubic-bezier(.2, .7, .2, 1); }
+.alerta-topo:not([hidden]) { animation: desce .3s ease-out; }
+.acct.stop .dot { animation: pulsa 1.6s ease-out infinite; }
+
+.btn { transition: background-color .15s, border-color .15s, color .15s, transform .1s, box-shadow .2s; }
+.btn.primary:hover { box-shadow: 0 8px 20px -8px var(--accent); }
+.btn.big.primary:hover { transform: translateY(-1px); }
+.btn:active, .btn.big.primary:active { transform: scale(.97); }
+.nav button, .bottomnav button, .seg label, .tbl tbody tr { transition: background-color .15s, color .15s; }
+.nav button svg { transition: color .15s, transform .2s; }
+.nav button:hover svg { transform: scale(1.1); }
+.brand .logo { transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); }
+.brand:hover .logo { transform: rotate(-8deg) scale(1.08); }
+.kpi { transition: transform .2s, box-shadow .2s; }
+.kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -12px var(--shadow); }
+input, select { transition: border-color .15s, background-color .15s; }
+
+/* Troca de tema suave: a classe fica só durante a troca */
+.trocando-tema, .trocando-tema * { transition: background-color .3s ease, border-color .3s ease, color .3s ease !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="logo" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span><div>Wessel Trading<small>Diário de trades · B3</small></div></div>
+    <nav class="nav" aria-label="Seções">
+      <button data-tab="hoje" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+      <button data-tab="historico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Histórico</button>
+      <button data-tab="painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Painel</button>
+      <button data-tab="imposto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Imposto</button>
+      <button data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configurações</button>
+    </nav>
+    <div class="side-foot">
+      <button class="btn ghost sm tema-btn" type="button" id="btnTutorial" data-action="tutorial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.7-2.5 2.2-2.5 3.8M12 17h.01"/></svg>Tutorial</button>
+      <button class="btn ghost sm tema-btn" type="button" id="btnTema"></button>
+      <div id="backupWarn" class="banner" hidden></div>
+      <div id="status" class="acct" role="status"></div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="pagehead">
+      <div class="t"><h1 id="pageTitle">Início</h1><p id="pageSub">Seu resultado e as posições abertas</p></div>
+      <button class="btn primary big" type="button" data-action="nova"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nova operação</button>
+    </header>
+    <div id="alertaTopo" class="alerta-topo" hidden></div>
+
+    <main>
+      <!-- INÍCIO -->
+      <section id="tab-hoje" class="tab active">
+        <div id="resumoHoje"></div>
+        <div id="metaMes"></div>
+        <div class="card" id="cardAbertas">
+          <div class="card-head"><h2>Posições abertas</h2><span class="muted" id="abertasInfo"></span><span class="muted small right">Atualize o preço atual para ver quanto está em aberto</span></div>
+          <div id="listaAbertas" class="list"></div>
+        </div>
+        <div id="blocoFechadasHoje" class="card" hidden>
+          <div class="card-head"><h2>Vendidas hoje</h2></div>
+          <div id="listaFechadasHoje" class="list"></div>
+        </div>
+      </section>
+
+      <!-- HISTÓRICO -->
+      <section id="tab-historico" class="tab">
+        <div class="toolbar">
+          <label>Mês<select id="fMes"></select></label>
+          <label>Ativo<select id="fAtivo"></select></label>
+          <label>Tipo<select id="fTipo">
+            <option value="">Todos</option><option value="DT">Day trade</option><option value="SW">Swing</option>
+          </select></label>
+          <label>Situação<select id="fStatus">
+            <option value="">Todas</option><option value="aberta">Abertas</option><option value="fechada">Fechadas</option>
+          </select></label>
+          <span class="info" id="histInfo"></span>
+        </div>
+        <div class="table-wrap"><table class="tbl" id="tblHist"></table></div>
+      </section>
+
+      <!-- PAINEL -->
+      <section id="tab-painel" class="tab">
+        <div id="painel"></div>
+        <div class="charts">
+          <div class="card"><h3>Patrimônio ao longo do tempo</h3><p class="muted small" style="margin:2px 0 12px">Capital + realizado (após custos e IR). O último ponto inclui o que está em aberto.</p><div class="chart-box"><canvas id="chEquity"></canvas></div></div>
+          <div class="card"><h3>Resultado líquido por mês</h3><p class="muted small" style="margin:2px 0 12px">Depois de custos e IR, pelo mês da venda. A linha tracejada é a meta do mês.</p><div class="chart-box"><canvas id="chMeses"></canvas></div></div>
+        </div>
+        <div id="painelResto" style="display:grid;gap:28px"></div>
+      </section>
+
+      <!-- IMPOSTO -->
+      <section id="tab-imposto" class="tab">
+        <div id="irResumo"></div>
+        <div class="table-wrap"><table class="tbl" id="tblIR"></table></div>
+        <div class="note">
+          <b>DARF código 6015, vence no último dia útil do mês seguinte. O IRRF retido pela corretora (1% DT / 0,005% swing) é abatido do valor.</b>
+          <span class="muted">DARF abaixo de R$ 10,00 não é pago: o valor fica acumulado para o mês seguinte. O vencimento mostrado considera só fins de semana (feriados não são descontados). Day trade e swing têm prejuízos separados: um não compensa o outro. A isenção do swing considera o total de vendas de ações no mês, incluindo as de day trade.</span>
+        </div>
+      </section>
+
+      <!-- CONFIG -->
+      <section id="tab-config" class="tab">
+        <form id="formCfg" class="card" novalidate>
+          <div id="cfgGrid"></div>
+          <div style="margin-top:20px"><button type="button" class="btn" id="btnPadroes">Restaurar padrões</button></div>
+        </form>
+        <div class="card">
+          <div class="card-head" style="margin-bottom:6px"><h2>Aportes e retiradas</h2></div>
+          <p style="margin:0 0 14px" class="muted">Dinheiro que você colocou a mais ou tirou da conta depois do início. Não conta como lucro nem prejuízo, mas muda a base do resultado, do CDI e dos limites.</p>
+          <div id="listaMov"></div>
+          <div class="backup-actions"><button class="btn" type="button" data-action="novo-mov">Registrar aporte ou retirada</button></div>
+        </div>
+        <div class="card">
+          <div class="card-head" style="margin-bottom:6px"><h2>Ações que você opera</h2></div>
+          <p style="margin:0 0 14px" class="muted">Aparecem como sugestão ao registrar uma operação. Remover uma ação daqui não apaga as operações já registradas.</p>
+          <div class="ativos-editor"></div>
+        </div>
+        <div class="card" id="cardBackup">
+          <div class="card-head" style="margin-bottom:6px"><h2>Backup dos dados</h2></div>
+          <p style="margin:0" class="muted">Seus dados ficam só neste navegador, neste aparelho. Limpar os dados do navegador apaga tudo: ative o backup automático abaixo ou exporte um backup com frequência (e guarde no Drive, e-mail etc.).</p>
+          <p style="margin:10px 0 0" class="small" id="infoBackup"></p>
+          <div class="backup-actions">
+            <button class="btn primary" type="button" data-action="exportar-json">Exportar backup (.json)</button>
+            <button class="btn" type="button" data-action="importar-json">Importar backup</button>
+            <button class="btn" type="button" data-action="exportar-csv">Exportar CSV</button>
+          </div>
+          <div id="autoBox" class="auto-box"></div>
+          <div class="cfg-sec" style="border-top:1px solid var(--border);padding-top:18px;margin-top:20px;gap:8px">
+            <b>Recomeçar do zero</b>
+            <span class="muted small">Apaga operações, configurações, meta, aportes e ações cadastradas deste navegador e volta para a primeira configuração. Exporte um backup antes se quiser guardar algo.</span>
+            <div class="backup-actions" style="margin-top:6px"><button class="btn danger" type="button" data-action="apagar-tudo">Apagar todos os dados</button></div>
+          </div>
+          <input type="file" id="fileImport" accept=".json,application/json" hidden>
+        </div>
+      </section>
+    </main>
+    <footer><b>Wessel Trading</b> · desenvolvido por Luiz Wessel<br>Valores de taxas são aproximados. Não é recomendação de investimento.</footer>
+  </div>
+</div>
+
+<nav class="bottomnav" aria-label="Seções">
+  <button data-tab="hoje" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-tab="historico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Histórico</button>
+  <button data-tab="painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Painel</button>
+  <button data-tab="imposto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Imposto</button>
+  <button data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Config.</button>
+</nav>
+
+<!-- Diálogo: nova operação -->
+<dialog id="dlgNova">
+  <form id="formNova" autocomplete="off" novalidate>
+    <div class="dlg-head"><h2>Nova operação</h2><span class="muted small">Registre a compra. Ela fica aberta até você vender.</span></div>
+    <div class="fgrid">
+      <label>Ativo
+        <input id="nAtivo" list="listaAtivos" placeholder="CASH3" autocapitalize="characters" spellcheck="false" required>
+      </label>
+      <label>Data de compra
+        <input id="nData" type="date" required>
+      </label>
+      <label>Quantidade
+        <input id="nQtd" inputmode="numeric" placeholder="1000" required>
+      </label>
+      <label>Preço de compra (R$)
+        <input id="nPreco" inputmode="decimal" placeholder="5,00" required>
+      </label>
+      <label class="span2">Motivo / setup <span class="hint">opcional</span>
+        <input id="nMotivo" list="listaMotivos" maxlength="140" placeholder="ex.: rompimento da máxima">
+      </label>
+    </div>
+    <div class="calc" id="nPreviewBox"><span class="preview" id="nPreview">Preencha quantidade e preço para ver o valor da compra.</span></div>
+    <div class="dlg-foot">
+      <button class="btn left" type="button" data-action="sim-compra">Simular venda</button>
+      <button class="btn ghost" type="button" data-close>Cancelar</button>
+      <button class="btn primary big" type="submit">Salvar operação</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="listaAtivos"></datalist>
+<datalist id="listaMotivos"></datalist>
+
+<!-- Diálogo: vender -->
+<dialog id="dlgVender">
+  <form method="dialog" id="formVender" novalidate>
+    <div class="dlg-head"><h2 id="vTitulo">Vender</h2><div class="muted small" id="vSub"></div></div>
+    <div class="fgrid">
+      <label class="span2">Quantidade a vender<input id="vQtd" inputmode="numeric" required><span class="hint" id="vQtdHint"></span></label>
+      <label>Preço de venda (R$)<input id="vPreco" inputmode="decimal" placeholder="0,00" required></label>
+      <label>Data de venda<input id="vData" type="date" required></label>
+    </div>
+    <div class="calc" id="vCalc"></div>
+    <div class="dlg-foot">
+      <button class="btn ghost" value="cancel" type="button" data-close>Cancelar</button>
+      <button class="btn primary big" type="submit">Confirmar venda</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: editar -->
+<dialog id="dlgEditar">
+  <form method="dialog" id="formEditar" novalidate>
+    <div class="dlg-head"><h2>Editar operação</h2><span class="muted small">Para reabrir uma operação vendida, apague o preço e a data de venda.</span></div>
+    <div class="fgrid">
+      <label>Ativo<input id="eAtivo" list="listaAtivos" autocapitalize="characters" spellcheck="false"></label>
+      <label>Quantidade<input id="eQtd" inputmode="numeric"></label>
+      <label>Preço de compra (R$)<input id="ePreco" inputmode="decimal"></label>
+      <label>Data de compra<input id="eData" type="date"></label>
+      <label>Preço de venda (R$)<input id="eVPreco" inputmode="decimal" placeholder="vazio = aberta"></label>
+      <label>Data de venda<input id="eVData" type="date"></label>
+      <label>Preço atual (R$)<input id="ePA" inputmode="decimal" placeholder="só p/ abertas"></label>
+      <label class="span2">Motivo / setup<input id="eMotivo" list="listaMotivos" maxlength="140"></label>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn danger left" type="button" id="eExcluir">Excluir</button>
+      <button class="btn ghost" type="button" data-close>Cancelar</button>
+      <button class="btn primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: simular venda -->
+<dialog id="dlgSim">
+  <form method="dialog" id="formSim" autocomplete="off" novalidate>
+    <div class="dlg-head"><h2 id="sTitulo">Simular venda</h2><div class="muted small" id="sSub"></div></div>
+    <div class="fgrid">
+      <label>Valorização (%)<input id="sPct" inputmode="decimal" placeholder="2,00"><span class="hint">Negativo para simular queda.</span></label>
+      <label>Preço de venda (R$)<input id="sPreco" inputmode="decimal" placeholder="0,00"><span class="hint">Preencha um e o outro é calculado.</span></label>
+    </div>
+    <div class="sim-atalhos" id="sAtalhos"></div>
+    <div class="calc" id="sCalc"></div>
+    <div class="dlg-foot">
+      <button class="btn ghost" type="button" data-close>Fechar</button>
+      <button class="btn primary" type="submit">Vender por esse preço</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: meta do mês -->
+<dialog id="dlgMeta">
+  <form method="dialog" id="formMeta" autocomplete="off" novalidate>
+    <div class="dlg-head"><h2>Meta do mês</h2><span class="muted small">Quanto você quer lucrar por mês, já depois de custos e imposto. Vale para todos os meses até você mudar.</span></div>
+    <div class="seg" role="radiogroup" aria-label="Tipo de meta" style="justify-self:start">
+      <input type="radio" name="gTipo" id="gTipoR" value="reais" checked><label for="gTipoR">Em reais (R$)</label>
+      <input type="radio" name="gTipo" id="gTipoP" value="pct"><label for="gTipoP">Em porcentagem (%)</label>
+    </div>
+    <label><span id="gRotulo">Meta de lucro por mês (R$)</span><input id="gValor" inputmode="decimal" placeholder="500,00"></label>
+    <div class="preview" id="gPreview"></div>
+    <div class="dlg-foot">
+      <button class="btn danger left" type="button" id="gRemover">Remover meta</button>
+      <button class="btn ghost" type="button" data-close>Cancelar</button>
+      <button class="btn primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: aporte ou retirada -->
+<dialog id="dlgMov">
+  <form method="dialog" id="formMov" autocomplete="off" novalidate>
+    <div class="dlg-head"><h2>Aporte ou retirada</h2><span class="muted small">Dinheiro que entrou ou saiu da conta sem ser resultado de operação.</span></div>
+    <div class="seg" role="radiogroup" aria-label="Tipo" style="justify-self:start">
+      <input type="radio" name="mTipo" id="mTipoA" value="aporte" checked><label for="mTipoA">Aporte</label>
+      <input type="radio" name="mTipo" id="mTipoR" value="retirada"><label for="mTipoR">Retirada</label>
+    </div>
+    <div class="fgrid">
+      <label>Valor (R$)<input id="mValor" inputmode="decimal" placeholder="1.000,00"></label>
+      <label>Data<input id="mData" type="date"></label>
+      <label class="span2">Observação <span class="hint">opcional</span><input id="mNota" maxlength="80"></label>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn ghost" type="button" data-close>Cancelar</button>
+      <button class="btn primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: primeira configuração -->
+<dialog id="dlgInicio">
+  <form id="formInicio" autocomplete="off" novalidate>
+    <div class="passo" data-passo="1">
+      <div class="dlg-head"><span class="muted small">Passo 1 de 2</span><h2>Bem-vindo à Wessel Trading</h2><span class="muted small">Com quanto dinheiro você vai começar a operar? Esse valor é a base do seu resultado e dos limites de risco.</span></div>
+      <label>Capital inicial (R$)
+        <input id="iCapital" inputmode="decimal" placeholder="5.000,00">
+        <span class="hint">Dá para mudar depois em Configurações.</span>
+      </label>
+      <div class="dlg-foot">
+        <button class="btn link left" type="button" data-action="importar-json">Já tenho um backup</button>
+        <button class="btn primary big" type="submit">Continuar</button>
+      </div>
+    </div>
+    <div class="passo" data-passo="2" hidden>
+      <div class="dlg-head"><span class="muted small">Passo 2 de 2</span><h2>Quais ações você vai operar?</h2><span class="muted small">Elas aparecem como sugestão ao registrar uma operação. Dá para mudar depois em Configurações.</span></div>
+      <div class="ativos-editor"></div>
+      <div class="dlg-foot">
+        <button class="btn ghost left" type="button" id="iVoltar">Voltar</button>
+        <button class="btn primary big" type="submit">Concluir</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Tutorial guiado -->
+<div class="tour" id="tour" hidden>
+  <div class="tour-foco" id="tourFoco"></div>
+  <div class="tour-balao" id="tourBalao" role="dialog" aria-modal="true" aria-labelledby="tourTitulo" aria-describedby="tourTexto">
+    <div class="tour-passo" id="tourPasso"></div>
+    <h3 id="tourTitulo"></h3>
+    <p id="tourTexto"></p>
+    <div class="tour-acoes">
+      <button class="btn link" type="button" id="tourPular">Pular tutorial</button>
+      <button class="btn sm" type="button" id="tourVoltar">Voltar</button>
+      <button class="btn primary sm" type="button" id="tourProx">Próximo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Chart.js local (funciona sem internet); se o arquivo não estiver na pasta, tenta o CDN -->
+<script src="chart.umd.min.js"></script>
+<script>window.Chart || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"><\/script>');</script>
+<script>
+'use strict';
+
+/* ================= Configuração e estado ================= */
+const STORAGE_KEY = 'diarioTradesB3.v1';
+const DEFAULTS = Object.freeze({
+  capitalInicial: 5000,
+  dataInicio: '2026-10-12',
+  taxaDT: 0.023,        // % sobre (compra + venda)
+  taxaSwing: 0.030,     // %
+  corretagem: 0,        // R$ por ordem
+  irDT: 20,             // %
+  irSwing: 15,          // %
+  irrfDT: 1,            // % sobre o lucro do dia em day trade
+  irrfSwing: 0.005,     // % sobre o valor de venda em swing
+  isencaoSwing: 20000,  // R$ em vendas de swing no mês
+  cdi: 14,              // % ao ano
+  limiteConta: 30,      // % do capital inicial
+  limiteOp: 3,          // % do capital inicial
+  metaMensal: 0,        // R$ de lucro líquido por mês (0 = sem meta em reais)
+  metaPct: 0            // % do patrimônio do começo do mês; se > 0, vale no lugar de metaMensal
+});
+const TICKER_RE = /^[A-Z]{4}\d{1,2}F?$/; // PETR4, TAEE11, AAPL34, PETR4F
+
+const CAMPOS_CFG = [
+  { g: 'Conta', k: 'capitalInicial', label: 'Capital inicial', unit: 'R$', hint: 'Quanto você colocou para operar.' },
+  { g: 'Conta', k: 'dataInicio', label: 'Data de início', type: 'date', hint: 'Base para a comparação com o CDI.' },
+  { g: 'Conta', k: 'cdi', label: 'CDI anual', unit: '%', hint: 'Valor ilustrativo — atualize com a taxa atual.' },
+  { g: 'Conta', k: 'metaMensal', label: 'Meta de lucro por mês (R$)', unit: 'R$', hint: 'Depois de custos e IR. Deixe 0 para não usar.' },
+  { g: 'Conta', k: 'metaPct', label: 'Meta de lucro por mês (%)', unit: '%', hint: 'Do patrimônio no começo do mês. Preenchida, substitui a meta em reais.' },
+  { g: 'Custos', k: 'taxaDT', label: 'Taxa B3 day trade', unit: '%', hint: 'Sobre compra + venda. Padrão 0,023%.' },
+  { g: 'Custos', k: 'taxaSwing', label: 'Taxa B3 swing', unit: '%', hint: 'Sobre compra + venda. Padrão 0,030%.' },
+  { g: 'Custos', k: 'corretagem', label: 'Corretagem por ordem', unit: 'R$', hint: 'Cobrada na compra e na venda.' },
+  { g: 'Imposto de renda', k: 'irDT', label: 'IR day trade', unit: '%', hint: 'Sobre o lucro líquido do mês.' },
+  { g: 'Imposto de renda', k: 'irSwing', label: 'IR swing', unit: '%', hint: 'Sobre o lucro do mês (se não isento).' },
+  { g: 'Imposto de renda', k: 'irrfDT', label: 'IRRF day trade', unit: '%', hint: 'Retido pela corretora sobre o lucro do dia. Abatido da DARF.' },
+  { g: 'Imposto de renda', k: 'irrfSwing', label: 'IRRF swing', unit: '%', hint: 'Retido sobre o valor de venda. Abatido da DARF.' },
+  { g: 'Imposto de renda', k: 'isencaoSwing', label: 'Isenção swing (vendas/mês)', unit: 'R$', hint: 'Total de vendas de ações no mês (swing + day trade) até esse valor: swing isento.' },
+  { g: 'Limites de risco', k: 'limiteConta', label: 'Limite de perda da conta', unit: '%', hint: 'Do capital aportado (inicial + aportes − retiradas). Ao atingir: PARAR.' },
+  { g: 'Limites de risco', k: 'limiteOp', label: 'Limite de perda por operação', unit: '%', hint: 'Do capital aportado (ex.: 3% de R$ 5.000 = R$ 150).' }
+];
+
+const PAGINAS = {
+  hoje: ['Início', 'Seu resultado e as posições abertas'],
+  historico: ['Histórico', 'Todas as operações registradas'],
+  painel: ['Painel', 'Resultado, desempenho e risco'],
+  imposto: ['Imposto', 'Apuração mês a mês, pelo mês da venda'],
+  config: ['Configurações', 'Salvas automaticamente']
+};
+
+let state; // carregado em "Início"
+let abaAtual = 'hoje';
+let charts = {};
+let vendendoId = null;
+let editandoId = null;
+const AUTO_OK = 'showSaveFilePicker' in window && 'indexedDB' in window;
+const auto = { handle: null, status: 'off', ultimo: null, gravando: false, pendente: false }; // status: off | ativo | pausado
+let passoInicio = 1;
+let tourIdx = -1; // passo atual do tutorial (-1 = fechado)
+// Respeita "reduzir movimento" do sistema
+let SEM_MOVIMENTO = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let patrimonioMostrado = null; // último patrimônio exibido no Início, para animar a mudança
+let simulandoId = null;
+let simCompra = null; // compra hipotética sendo simulada a partir da tela "Nova operação"
+let diaRender = null; // dia do último render, para redesenhar quando a data virar
+
+/* ================= Utilidades ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const FMT_BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MESES_NOME = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+function limpaZero(v) { return Math.abs(v) < 0.005 ? 0 : v; }
+function brl(v) { return FMT_BRL.format(limpaZero(v)); }
+function brlSinal(v) { v = limpaZero(v); return (v > 0 ? '+' : '') + FMT_BRL.format(v); }
+function num(v, d = 2) { return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(v); }
+function inteiro(v) { return new Intl.NumberFormat('pt-BR').format(v); }
+function pct(v, d = 2) { return Number.isFinite(v) ? num(v * 100, d) + '%' : '—'; }
+function pctSinal(v, d = 2) { return Number.isFinite(v) ? (v > 0.00005 ? '+' : '') + pct(v, d) : '—'; }
+function cor(v) { v = limpaZero(v); return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
+function paraInput(v) { return v == null ? '' : String(v).replace('.', ','); }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function avatar(tk) {
+  let h = 0; for (const ch of tk) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `<span class="av" style="--h:${h}">${esc(tk.slice(0, 4))}</span>`;
+}
+
+// Aceita "5,10", "5.10", "1.234,56", "R$ 5,10"
+// Com milhar = true, "5.000" e "20.000" são lidos como milhares (para valores em R$ das configurações)
+function lerNumero(str, milhar = false) {
+  if (str == null) return NaN;
+  let s = String(str).trim().replace(/R\$|\s/g, '');
+  if (!s) return NaN;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (milhar && /^[1-9]\d{0,2}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  if (!/^-?\d*\.?\d+$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+// Ponto só vale como separador de milhar ("1.000"); "1.5" e "1,5" são inválidos
+function lerInteiro(str) {
+  const s = String(str ?? '').replace(/\s/g, '');
+  return /^(\d+|\d{1,3}(\.\d{3})+)$/.test(s) ? parseInt(s.replace(/\./g, ''), 10) : NaN;
+}
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+function hojeISO() { return isoLocal(new Date()); }
+function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dataValida(s) { if (!ISO_RE.test(s || '')) return false; const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d); return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d; }
+function fmtData(iso) { if (!iso) return '—'; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
+function fmtMes(ym) { const [y, m] = ym.split('-'); return `${MESES[+m - 1]}/${y}`; }
+function utc(iso) { const [y, m, d] = iso.split('-').map(Number); return Date.UTC(y, m - 1, d); }
+function diasEntre(a, b) { return Math.round((utc(b) - utc(a)) / 86400000); }
+function textoDias(n) { return n <= 0 ? 'aberta hoje' : n === 1 ? 'há 1 dia' : `há ${n} dias`; }
+function vencimentoDarf(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m + 1, 0); // último dia do mês seguinte
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+  return isoLocal(d);
+}
+
+/* ================= Persistência ================= */
+// ativos: ações cadastradas pelo usuário; inicioFeito: já passou pela primeira configuração
+// movimentos: aportes (+) e retiradas (−); darfPagas: mês da apuração → data em que a DARF foi paga
+function estadoVazio() { return { settings: { ...DEFAULTS, dataInicio: hojeISO() }, trades: [], ativos: [], movimentos: [], darfPagas: {}, inicioFeito: false, tutorialVisto: false, lastBackup: null }; }
+
+function carregar() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { console.warn('localStorage indisponível', e); }
+  if (!raw) return estadoVazio();
+  try {
+    const d = JSON.parse(raw);
+    const v = validarDados(d);
+    if (v.ok) return normalizar(d);
+    throw new Error(v.erro);
+  } catch (e) {
+    try { localStorage.setItem(STORAGE_KEY + '.problema.' + Date.now(), raw); } catch (_) {}
+    console.error('Dados salvos inválidos; cópia preservada.', e);
+    setTimeout(() => toast('Os dados salvos estavam corrompidos. Uma cópia foi preservada; importe um backup.', 6000), 300);
+    return estadoVazio();
+  }
+}
+
+function normalizar(d) {
+  const settings = { ...DEFAULTS };
+  if (d.settings && typeof d.settings === 'object') {
+    for (const k of Object.keys(DEFAULTS)) {
+      const v = d.settings[k];
+      if (k === 'dataInicio') { if (dataValida(v)) settings[k] = v; }
+      else if (typeof v === 'number' && Number.isFinite(v) && v >= 0 && (k !== 'capitalInicial' || v > 0)) settings[k] = v;
+    }
+  }
+  // Ids vão para atributos HTML e identificam a operação: precisam ser simples e únicos
+  const ids = new Set();
+  const idSeguro = id => {
+    let s = String(id ?? '');
+    if (!/^[\w-]+$/.test(s) || ids.has(s)) s = uid();
+    ids.add(s);
+    return s;
+  };
+  const trades = d.trades.map(t => ({
+    id: idSeguro(t.id),
+    ativo: String(t.ativo).trim().toUpperCase(),
+    qtd: Number(t.qtd),
+    precoCompra: Number(t.precoCompra),
+    dataCompra: t.dataCompra,
+    precoVenda: t.precoVenda == null ? null : Number(t.precoVenda),
+    dataVenda: t.precoVenda == null ? null : t.dataVenda,
+    precoAtual: t.precoAtual == null ? null : Number(t.precoAtual),
+    motivo: String(t.motivo || '').slice(0, 140),
+    // Fração da corretagem da ordem de compra que cabe a esta operação (menor que 1 após venda parcial)
+    parteCompra: Number.isFinite(+t.parteCompra) && +t.parteCompra >= 0 && +t.parteCompra <= 1 ? +t.parteCompra : 1,
+    criadoEm: t.criadoEm || new Date().toISOString()
+  }));
+  const movimentos = (Array.isArray(d.movimentos) ? d.movimentos : [])
+    .filter(m => m && dataValida(m.data) && Number.isFinite(+m.valor) && +m.valor !== 0)
+    .map(m => ({ id: idSeguro(m.id), data: m.data, valor: +m.valor, nota: String(m.nota || '').slice(0, 80) }));
+  const darfPagas = {};
+  if (d.darfPagas && typeof d.darfPagas === 'object') {
+    for (const [k, v] of Object.entries(d.darfPagas)) if (/^\d{4}-\d{2}$/.test(k) && dataValida(v)) darfPagas[k] = v;
+  }
+  const ativos = [...new Set((Array.isArray(d.ativos) ? d.ativos : []).map(a => String(a).trim().toUpperCase()).filter(a => TICKER_RE.test(a)))].sort();
+  // Dados de antes da primeira configuração existir: quem já tem operações não precisa passar por ela
+  const inicioFeito = d.inicioFeito === true || trades.length > 0;
+  return { settings, trades, ativos, movimentos, darfPagas, inicioFeito, tutorialVisto: d.tutorialVisto === true, lastBackup: typeof d.lastBackup === 'string' ? d.lastBackup : null };
+}
+
+function validarDados(d) {
+  if (!d || typeof d !== 'object') return { ok: false, erro: 'Arquivo não contém um objeto JSON.' };
+  if (!Array.isArray(d.trades)) return { ok: false, erro: 'Campo "trades" ausente ou inválido.' };
+  for (let i = 0; i < d.trades.length; i++) {
+    const t = d.trades[i], n = `Operação ${i + 1}`;
+    if (!t || typeof t !== 'object') return { ok: false, erro: `${n}: formato inválido.` };
+    if (typeof t.ativo !== 'string' || !t.ativo.trim()) return { ok: false, erro: `${n}: ativo vazio.` };
+    if (!(Number.isInteger(+t.qtd) && +t.qtd > 0)) return { ok: false, erro: `${n}: quantidade inválida.` };
+    if (!(Number.isFinite(+t.precoCompra) && +t.precoCompra > 0)) return { ok: false, erro: `${n}: preço de compra inválido.` };
+    if (!dataValida(t.dataCompra)) return { ok: false, erro: `${n}: data de compra inválida.` };
+    if (t.precoVenda != null) {
+      if (!(Number.isFinite(+t.precoVenda) && +t.precoVenda > 0)) return { ok: false, erro: `${n}: preço de venda inválido.` };
+      if (!dataValida(t.dataVenda) || t.dataVenda < t.dataCompra) return { ok: false, erro: `${n}: data de venda inválida.` };
+    }
+    if (t.precoAtual != null && !(Number.isFinite(+t.precoAtual) && +t.precoAtual >= 0)) return { ok: false, erro: `${n}: preço atual inválido.` };
+  }
+  if (d.movimentos != null && !Array.isArray(d.movimentos)) return { ok: false, erro: 'Campo "movimentos" inválido.' };
+  if (d.settings != null && typeof d.settings !== 'object') return { ok: false, erro: 'Configurações inválidas.' };
+  return { ok: true };
+}
+
+function salvar() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    gravarAuto();
+    return true;
+  } catch (e) {
+    console.error(e);
+    toast('Não foi possível salvar no navegador! Exporte um backup agora.', 6000);
+    return false;
+  }
+}
+
+function commit() { salvar(); renderTudo(); }
+
+/* ================= Cálculos ================= */
+const S = () => state.settings;
+function fechada(t) { return t.precoVenda != null && !!t.dataVenda; }
+function tipoOp(t) { return !fechada(t) ? null : (t.dataVenda === t.dataCompra ? 'DT' : 'SW'); }
+
+function calcOp(t, s = S()) {
+  const vc = t.qtd * t.precoCompra;
+  if (fechada(t)) {
+    const tipo = tipoOp(t);
+    const vv = t.qtd * t.precoVenda;
+    const taxa = (tipo === 'DT' ? s.taxaDT : s.taxaSwing) / 100;
+    const custos = (vc + vv) * taxa + (1 + (t.parteCompra ?? 1)) * s.corretagem;
+    const res = vv - vc - custos;
+    const irEst = tipo === 'DT' ? Math.max(0, res) * s.irDT / 100 : null;
+    return { fechada: true, tipo, vc, vv, bruto: vv - vc, custos, res, pct: res / vc, irEst };
+  }
+  const pa = t.precoAtual != null ? t.precoAtual : t.precoCompra;
+  const nr = t.qtd * (pa - t.precoCompra);
+  return { fechada: false, vc, pa, nr, pct: nr / vc, temPA: t.precoAtual != null };
+}
+// Capital colocado na conta até a data: inicial + aportes − retiradas
+function capitalEm(data) {
+  let c = S().capitalInicial;
+  for (const m of state.movimentos) if (m.data <= data) c += m.valor;
+  return c;
+}
+function limiteOpReais(data = hojeISO()) { return S().limiteOp / 100 * Math.max(0, capitalEm(data)); }
+function passouLimite(t) { const c = calcOp(t); return (c.fechada ? c.res : c.nr) < -limiteOpReais(c.fechada ? t.dataVenda : hojeISO()) - 1e-9; }
+function diasAberta(t) { return diasEntre(t.dataCompra, fechada(t) ? t.dataVenda : hojeISO()); }
+
+// Apuração mensal de IR (pelo mês da venda)
+function apuracao() {
+  const s = S(), meses = {}, dtPorDia = {};
+  for (const t of state.trades) {
+    if (!fechada(t)) continue;
+    const ym = t.dataVenda.slice(0, 7), c = calcOp(t);
+    const m = meses[ym] || (meses[ym] = { ym, dt: 0, sw: 0, vendas: 0, vendasSw: 0, custos: 0, nDT: 0, nSW: 0, irrf: 0 });
+    if (c.tipo === 'DT') { m.dt += c.res; m.nDT++; dtPorDia[t.dataVenda] = (dtPorDia[t.dataVenda] || 0) + c.res; }
+    else { m.sw += c.res; m.vendasSw += c.vv; m.nSW++; m.irrf += c.vv * s.irrfSwing / 100; }
+    m.custos += c.custos; m.vendas += c.vv;
+  }
+  // IRRF de day trade: sobre o resultado positivo de cada dia
+  for (const [dia, res] of Object.entries(dtPorDia)) if (res > 0) meses[dia.slice(0, 7)].irrf += res * s.irrfDT / 100;
+  const lista = Object.values(meses).sort((a, b) => a.ym.localeCompare(b.ym));
+  let prejDT = 0, prejSW = 0, acum = 0, creditoIRRF = 0, pendente = 0;
+  for (const m of lista) {
+    if (m.dt < 0) { prejDT += -m.dt; m.baseDT = 0; }
+    else { const comp = Math.min(prejDT, m.dt); prejDT -= comp; m.baseDT = m.dt - comp; }
+    m.irDT = m.baseDT * s.irDT / 100;
+    // O limite de isenção olha todas as vendas de ações do mês (inclusive day trade); só o lucro de swing fica isento
+    m.isento = m.nSW > 0 && m.vendas <= s.isencaoSwing;
+    if (m.sw < 0) { prejSW += -m.sw; m.baseSW = 0; }
+    else if (m.isento) { m.baseSW = 0; }
+    else { const comp = Math.min(prejSW, m.sw); prejSW -= comp; m.baseSW = m.sw - comp; }
+    m.irSW = m.baseSW * s.irSwing / 100;
+    m.prejDT = prejDT; m.prejSW = prejSW;
+    m.ir = m.irDT + m.irSW; // imposto do mês (antes de abater IRRF)
+    creditoIRRF += m.irrf;
+    m.irrfAbatido = Math.min(creditoIRRF, m.ir);
+    creditoIRRF -= m.irrfAbatido;
+    m.creditoIRRF = creditoIRRF;
+    m.pendenteAnterior = pendente; // DARF < R$ 10 de meses anteriores
+    m.darf = m.ir - m.irrfAbatido + pendente;
+    m.adiada = m.darf > 0 && m.darf < 10 - 1e-9;
+    pendente = m.adiada ? m.darf : 0;
+    m.liquido = m.dt + m.sw - m.ir;
+    m.capitalBase = capitalEm(m.ym + '-31') + acum;
+    m.pctMes = m.capitalBase > 0 ? m.liquido / m.capitalBase : NaN;
+    acum += m.liquido; m.acum = acum;
+    m.venc = vencimentoDarf(m.ym);
+    m.aPagar = m.darf > 0 && !m.adiada;
+    m.pagaEm = state.darfPagas[m.ym] || null;
+  }
+  return lista;
+}
+
+function estatisticas() {
+  const s = S(), hoje = hojeISO();
+  const fech = state.trades.filter(fechada).sort((a, b) => (a.dataVenda + a.criadoEm).localeCompare(b.dataVenda + b.criadoEm));
+  const abertas = state.trades.filter(t => !fechada(t));
+  const meses = apuracao();
+
+  let somaRes = 0, custos = 0, nDT = 0, nSW = 0;
+  const ganhos = [], perdas = [];
+  for (const t of fech) {
+    const c = calcOp(t);
+    somaRes += c.res; custos += c.custos;
+    c.tipo === 'DT' ? nDT++ : nSW++;
+    if (c.res > 0) ganhos.push(c.res); else if (c.res < 0) perdas.push(c.res);
+  }
+  const irTotal = meses.reduce((a, m) => a + m.ir, 0);
+  const realizado = somaRes - irTotal;
+
+  let naoReal = 0, preso = 0, somaDias = 0;
+  for (const t of abertas) { const c = calcOp(t); naoReal += c.nr; preso += c.vc; somaDias += diasAberta(t); }
+
+  const total = realizado + naoReal;
+  const aportado = capitalEm(hoje);
+  const capitalAtual = aportado + total;
+  const dias = Math.max(0, diasEntre(s.dataInicio, hoje));
+  // CDI: cada valor rende a partir do dia em que entrou (retiradas descontam)
+  const rendeCdi = (valor, d) => valor * (Math.pow(1 + s.cdi / 100, d / 365) - 1);
+  let cdiGanho = rendeCdi(s.capitalInicial, dias);
+  for (const m of state.movimentos) if (m.data <= hoje) cdiGanho += rendeCdi(m.valor, Math.min(dias, Math.max(0, diasEntre(m.data, hoje))));
+  const vsCdi = total - cdiGanho;
+
+  const acerto = fech.length ? ganhos.length / fech.length : NaN;
+  const ganhoMedio = ganhos.length ? ganhos.reduce((a, b) => a + b, 0) / ganhos.length : NaN;
+  const perdaMedia = perdas.length ? perdas.reduce((a, b) => a + b, 0) / perdas.length : NaN;
+  const payoff = ganhos.length && perdas.length ? ganhoMedio / Math.abs(perdaMedia) : NaN;
+  const acertoNec = Number.isFinite(payoff) ? 1 / (1 + payoff) : NaN;
+  const perdedora = Number.isFinite(acertoNec) && acerto < acertoNec;
+
+  let alertaSwing = false;
+  if (nSW > 0) {
+    if (nSW >= nDT) alertaSwing = true;
+    else if (fech.length >= 4) {
+      const h = Math.floor(fech.length / 2);
+      const share = arr => arr.filter(t => tipoOp(t) === 'SW').length / arr.length;
+      alertaSwing = share(fech.slice(h)) > share(fech.slice(0, h));
+    }
+  }
+
+  const passou = state.trades.filter(passouLimite).length;
+  const maiorGanho = ganhos.length ? Math.max(...ganhos) : null;
+  const maiorPerda = perdas.length ? Math.min(...perdas) : null;
+
+  let status = 'ok';
+  if (capitalAtual <= aportado * (1 - s.limiteConta / 100)) status = 'stop';
+  else if (vsCdi < -0.005) status = 'warn';
+
+  return {
+    fech, abertas, meses, somaRes, custos, irTotal, realizado, naoReal, total, capitalAtual,
+    retorno: aportado > 0 ? total / aportado : NaN, aportado, dias, cdiGanho, vsCdi, nDT, nSW, acerto, ganhoMedio, perdaMedia,
+    payoff, acertoNec, perdedora, nGanhos: ganhos.length, nPerdas: perdas.length, alertaSwing, passou,
+    maiorGanho, maiorPerda, preso, diasMedios: abertas.length ? somaDias / abertas.length : 0, status
+  };
+}
+
+/* ================= Render: geral ================= */
+function renderTudo(redesenharAbertas = true) {
+  const st = estatisticas();
+  diaRender = hojeISO();
+  renderStatus(st);
+  renderBackupAviso();
+  renderAtivos();
+  renderHoje(st, redesenharAbertas);
+  renderHistorico();
+  renderImposto(st);
+  if (abaAtual === 'painel') renderPainel(st);
+}
+
+function renderStatus(st) {
+  const el = $('#status');
+  const txt = st.status === 'stop' ? 'PARAR' : st.status === 'warn' ? 'Abaixo do CDI' : 'Conta dentro dos limites';
+  el.className = 'acct ' + st.status;
+  el.innerHTML = `<div class="head"><span class="dot"></span>${txt}</div><div class="sub num">Total ${brlSinal(st.total)} · CDI no período ${brl(st.cdiGanho)}</div>`;
+  const topo = $('#alertaTopo');
+  topo.hidden = st.status !== 'stop';
+  if (st.status === 'stop') topo.innerHTML = `PARAR — limite de perda da conta atingido <span>Capital estimado ${brl(st.capitalAtual)}, limite de ${num(S().limiteConta, 0)}% do capital aportado.</span>`;
+}
+
+function renderBackupAviso() {
+  const el = $('#backupWarn');
+  const lb = state.lastBackup;
+  const dias = lb ? Math.floor((Date.now() - new Date(lb).getTime()) / 86400000) : null;
+  let msg = '', acao = 'exportar-json', rotulo = 'Exportar backup';
+  if (auto.status === 'pausado') { msg = 'Backup automático pausado.'; acao = 'auto-reativar'; rotulo = 'Reativar'; }
+  else if (auto.status === 'ativo') msg = '';
+  else if (state.trades.length && !lb) msg = 'Você ainda não exportou nenhum backup.';
+  else if (lb && dias > 7) msg = `Último backup exportado há ${dias} dias.`;
+  el.hidden = !msg;
+  if (msg) el.innerHTML = `<span>${msg}</span><button class="btn sm" data-action="${acao}">${rotulo}</button>`;
+  const info = $('#infoBackup');
+  if (info) info.textContent = lb ? `Último backup exportado em ${new Date(lb).toLocaleString('pt-BR')}.` : 'Nenhum backup exportado ainda.';
+  renderAutoBackup();
+}
+
+function renderAutoBackup() {
+  const el = $('#autoBox');
+  const titulo = '<b>Backup automático em arquivo</b>';
+  if (!AUTO_OK) {
+    el.innerHTML = `${titulo}<span class="muted small">Este navegador não permite gravar o backup sozinho. Use "Exportar backup" com frequência.</span>`;
+  } else if (auto.status === 'off') {
+    el.innerHTML = `${titulo}<span class="muted small">Grava uma cópia dos dados em um arquivo deste computador a cada alteração. Se os dados do navegador forem apagados, é só importar esse arquivo.</span>
+      <div class="backup-actions"><button class="btn" type="button" data-action="auto-escolher">Ativar backup automático</button></div>`;
+  } else {
+    const ativo = auto.status === 'ativo';
+    const detalhe = !ativo ? 'O navegador precisa da sua permissão de novo para gravar no arquivo.'
+      : auto.ultimo ? `Última gravação às ${auto.ultimo.toLocaleTimeString('pt-BR')}.` : 'Grava na próxima alteração.';
+    el.innerHTML = `${titulo}<span class="small"><span class="${ativo ? 'pos' : 'neg'}">${ativo ? 'Ativo' : 'Pausado'}</span> · arquivo <b>${esc(auto.handle.name)}</b>. <span class="muted">${detalhe}</span></span>
+      <div class="backup-actions">${ativo ? '' : '<button class="btn primary" type="button" data-action="auto-reativar">Reativar</button>'}
+        <button class="btn" type="button" data-action="auto-escolher">Trocar arquivo</button>
+        <button class="btn ghost" type="button" data-action="auto-desativar">Desativar</button></div>`;
+  }
+}
+
+function renderAtivos() {
+  const set = new Set(state.ativos);
+  state.trades.forEach(t => set.add(t.ativo));
+  $('#listaAtivos').innerHTML = [...set].sort().map(a => `<option value="${esc(a)}">`).join('');
+  const motivos = new Set(state.trades.map(t => t.motivo.trim()).filter(Boolean));
+  $('#listaMotivos').innerHTML = [...motivos].sort().map(m => `<option value="${esc(m)}">`).join('');
+}
+
+/* Bloco principal: patrimônio + Realizado + Em aberto = Total */
+function heroHTML(st) {
+  const s = S();
+  return `<div class="card hero">
+    <div class="hero-top">
+      <div>
+        <div class="lbl">Patrimônio estimado</div>
+        <div class="hero-val num">${brl(st.capitalAtual)}</div>
+        <div class="sub num">Capital ${state.movimentos.length ? 'aportado' : 'inicial'} ${brl(st.aportado)} <span class="pill ${cor(st.total)}">${brlSinal(st.total)} · ${pctSinal(st.retorno)}</span></div>
+      </div>
+      <div class="hero-cdi">
+        <div class="lbl">Você vs CDI (${st.dias} dia${st.dias === 1 ? '' : 's'})</div>
+        <div class="v num ${cor(st.vsCdi)}">${brlSinal(st.vsCdi)}</div>
+        <div class="muted small num">CDI teria rendido ${brl(st.cdiGanho)}</div>
+      </div>
+    </div>
+    <div class="eq num">
+      <div class="eq-item"><div class="lbl">Realizado</div><div class="v ${cor(st.realizado)}">${brlSinal(st.realizado)}</div><div class="h">Operações já vendidas, depois de custos e IR. Esse valor não muda mais.</div></div>
+      <div class="eq-op" aria-hidden="true">+</div>
+      <div class="eq-item"><div class="lbl">Em aberto <span class="hint">(não realizado)</span></div><div class="v ${cor(st.naoReal)}">${brlSinal(st.naoReal)}</div><div class="h">${st.abertas.length ? `${st.abertas.length} ${st.abertas.length === 1 ? 'posição' : 'posições'} pelo preço atual. Muda até você vender.` : 'Nenhuma posição aberta agora.'}</div></div>
+      <div class="eq-op" aria-hidden="true">=</div>
+      <div class="eq-item total"><div class="lbl">Resultado total</div><div class="v ${cor(st.total)}">${brlSinal(st.total)}</div><div class="h">O número real: quanto você ganhou ou perdeu até hoje.</div></div>
+    </div>
+  </div>`;
+}
+
+// Conta o valor em reais de "de" até "para" (usado quando o patrimônio muda)
+function animarValor(el, de, para, ms = 600) {
+  if (SEM_MOVIMENTO || !el || !Number.isFinite(de) || Math.abs(para - de) < 0.005) return;
+  const inicio = performance.now();
+  const passo = agora => {
+    if (!el.isConnected) return; // o bloco foi redesenhado no meio da animação
+    const k = Math.min(1, (agora - inicio) / ms);
+    el.textContent = brl(de + (para - de) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+}
+
+/* ================= Meta do mês ================= */
+// Dias de segunda a sexta de hoje até o fim do mês (feriados não são descontados)
+function diasUteisRestantes() {
+  const d = new Date(), mes = d.getMonth();
+  let n = 0;
+  for (; d.getMonth() === mes; d.setDate(d.getDate() + 1)) if (d.getDay() !== 0 && d.getDay() !== 6) n++;
+  return n;
+}
+
+// Patrimônio realizado no começo do mês: a mesma base da coluna "%" da aba Imposto
+function baseDoMes(st, ym) {
+  const m = st.meses.find(x => x.ym === ym);
+  if (m) return m.capitalBase;
+  const anterior = st.meses.filter(x => x.ym < ym).pop();
+  return capitalEm(ym + '-31') + (anterior ? anterior.acum : 0);
+}
+// Meta do mês em reais, seja ela definida em R$ ou em %
+function metaReais(st, ym) {
+  const s = S();
+  return s.metaPct > 0 ? s.metaPct / 100 * Math.max(0, baseDoMes(st, ym)) : s.metaMensal;
+}
+
+// Conta para a meta o resultado líquido das vendas do mês (depois de custos e IR), como na aba Imposto
+function metaHTML(st) {
+  const ym = hojeISO().slice(0, 7), nomeMes = MESES_NOME[+ym.slice(5) - 1], meta = metaReais(st, ym);
+  const emPct = S().metaPct > 0 ? ` <span class="hint">(${num(S().metaPct, 2)}% de ${brl(baseDoMes(st, ym))})</span>` : '';
+  if (!(meta > 0)) {
+    return `<div class="card meta-card"><div class="card-head"><h2>Meta do mês</h2><span class="muted">Defina quanto quer lucrar por mês e acompanhe o progresso aqui.</span>
+      <button class="btn sm right" type="button" data-action="meta">Definir meta</button></div></div>`;
+  }
+  const m = st.meses.find(x => x.ym === ym), lucro = m ? m.liquido : 0;
+  const frac = lucro / meta, falta = meta - lucro, batida = falta <= 0.005, dias = diasUteisRestantes();
+  const info = batida
+    ? `<span class="pos"><b style="color:inherit">Meta batida!</b>${lucro - meta > 0.005 ? ` Passou ${brl(lucro - meta)}.` : ''}</span>`
+    : `<span>Faltam <b>${brl(falta)}</b></span><span>${dias} ${dias === 1 ? 'dia útil restante' : 'dias úteis restantes'}${dias > 0 ? ` · precisa de <b>${brl(falta / dias)}</b> por dia` : ''}</span>`;
+  return `<div class="card meta-card">
+    <div class="card-head"><h2>Meta de ${nomeMes}</h2><span class="muted num"><b class="${cor(lucro)}">${brlSinal(lucro)}</b> de ${brl(meta)}${emPct}</span>
+      <span class="pill num right ${batida ? 'pos' : ''}">${pct(Math.max(0, frac), 0)}</span><button class="btn link" type="button" data-action="meta">Alterar</button></div>
+    <div class="meta-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(Math.min(1, Math.max(0, frac)) * 100)}" aria-label="Progresso da meta do mês">
+      <div class="meta-fill ${batida ? 'ok' : ''}" style="width:${Math.min(100, Math.max(0, frac * 100)).toFixed(1)}%"></div></div>
+    <div class="meta-info num">${info}${lucro < -0.005 ? '<span class="neg">O mês está no negativo.</span>' : ''}${Math.abs(st.naoReal) > 0.005 ? `<span>Em aberto: <b class="${cor(st.naoReal)}">${brlSinal(st.naoReal)}</b> (só conta quando vender)</span>` : ''}</div>
+  </div>`;
+}
+
+function abrirMeta() {
+  const s = S(), el = $('#gValor'), emPct = s.metaPct > 0, valor = emPct ? s.metaPct : s.metaMensal;
+  $(emPct ? '#gTipoP' : '#gTipoR').checked = true;
+  el.value = valor > 0 ? paraInput(valor) : ''; el.removeAttribute('aria-invalid');
+  $('#gRemover').hidden = !(valor > 0);
+  previewMeta();
+  $('#dlgMeta').showModal();
+  el.focus(); el.select();
+}
+
+function previewMeta() {
+  const emPct = $('#gTipoP').checked, el = $('#gValor');
+  $('#gRotulo').textContent = emPct ? 'Meta de lucro por mês (%)' : 'Meta de lucro por mês (R$)';
+  el.placeholder = emPct ? '2,00' : '500,00';
+  const v = lerNumero(el.value, !emPct), base = baseDoMes(estatisticas(), hojeISO().slice(0, 7));
+  $('#gPreview').textContent = !(v > 0 && base > 0) ? ''
+    : emPct ? `Neste mês isso dá ${brl(v / 100 * base)} (sobre o patrimônio de ${brl(base)} no começo do mês). O valor em reais muda a cada mês.`
+    : `Isso é ${pct(v / base, 1)} do patrimônio do começo do mês (${brl(base)}).`;
+}
+
+// As duas formas de meta são excludentes: definir uma zera a outra
+function definirMeta(reais, porcento) {
+  state.settings.metaMensal = reais; state.settings.metaPct = porcento;
+  $('#dlgMeta').close();
+  commit();
+  if (abaAtual === 'config') renderConfig();
+  toast(porcento > 0 ? `Meta do mês: ${num(porcento, 2)}% do patrimônio.` : reais > 0 ? `Meta do mês: ${brl(reais)}.` : 'Meta removida.');
+}
+
+function salvarMeta(e) {
+  e.preventDefault();
+  const emPct = $('#gTipoP').checked, el = $('#gValor'), v = lerNumero(el.value, !emPct);
+  if (marcarInvalido(el, !(v > 0) || (emPct && v > 100))) { toast(emPct && v > 100 ? 'A porcentagem não pode passar de 100%.' : 'Informe um valor maior que zero.'); return; }
+  definirMeta(emPct ? 0 : v, emPct ? v : 0);
+}
+
+/* ================= Render: Início ================= */
+function renderHoje(st, redesenharAbertas = true) {
+  $('#resumoHoje').innerHTML = heroHTML(st);
+  if (patrimonioMostrado != null) animarValor($('#resumoHoje .hero-val'), patrimonioMostrado, st.capitalAtual);
+  patrimonioMostrado = st.capitalAtual;
+
+  // A barra da meta é recriada a cada render: parte da largura anterior para a transição acontecer
+  const larguraAntes = $('#metaMes .meta-fill')?.style.width;
+  $('#metaMes').innerHTML = metaHTML(st);
+  const barra = $('#metaMes .meta-fill');
+  if (barra && !SEM_MOVIMENTO) {
+    const alvo = barra.style.width;
+    barra.style.width = larguraAntes || '0%';
+    barra.offsetWidth; // força o navegador a registrar a largura inicial
+    barra.style.width = alvo;
+  }
+
+  if (redesenharAbertas) {
+    const abertas = state.trades.filter(t => !fechada(t)).sort((a, b) => a.dataCompra.localeCompare(b.dataCompra));
+    $('#abertasInfo').textContent = abertas.length ? `${abertas.length} · ${brl(st.preso)} investidos` : '';
+    $('#listaAbertas').innerHTML = abertas.length ? abertas.map(cardAberta).join('')
+      : '<div class="empty"><span>Nenhuma posição aberta.</span><button class="btn primary" data-action="nova">Registrar uma compra</button></div>';
+  }
+
+  const hoje = hojeISO();
+  const fh = state.trades.filter(t => fechada(t) && t.dataVenda === hoje);
+  $('#blocoFechadasHoje').hidden = !fh.length;
+  $('#listaFechadasHoje').innerHTML = fh.map(cardFechada).join('');
+  atualizarPreviewNova();
+}
+
+function chipsAberta(t) {
+  return `<span class="chip">${textoDias(diasAberta(t))}</span>${passouLimite(t) ? '<span class="chip red">Passou do limite</span>' : ''}`;
+}
+
+function cardAberta(t) {
+  const c = calcOp(t);
+  return `<div class="row pos-card" data-id="${t.id}">
+    <div class="who">${avatar(t.ativo)}<div style="min-width:0">
+      <div class="tk">${esc(t.ativo)}</div>
+      <div class="meta num">${inteiro(t.qtd)} × ${brl(t.precoCompra)} · ${fmtData(t.dataCompra)}</div>
+      <div class="chips" data-chips>${chipsAberta(t)}</div>
+      ${t.motivo ? `<div class="meta" style="margin-top:4px">${esc(t.motivo)}</div>` : ''}
+    </div></div>
+    <div class="cell inv"><div class="lbl">Investido</div><div class="v num">${brl(c.vc)}</div></div>
+    <label class="cell" style="gap:4px"><span class="lbl">Preço atual</span><input class="num" data-pa="${t.id}" inputmode="decimal" placeholder="${paraInput(t.precoCompra)}" value="${paraInput(t.precoAtual)}"></label>
+    <div class="cell r"><div class="lbl">Em aberto</div><div class="big num ${cor(c.nr)}" data-nr>${brlSinal(c.nr)}</div><div class="${cor(c.nr)} small num" data-nrp>${pctSinal(c.pct)}</div></div>
+    <div class="acts"><button class="btn ghost sm" data-edit="${t.id}">Editar</button><button class="btn sm" data-sim="${t.id}">Simular</button><button class="btn primary sm" data-vender="${t.id}">Vender</button></div>
+  </div>`;
+}
+
+function cardFechada(t) {
+  const c = calcOp(t);
+  const liq = c.tipo === 'DT' ? c.res - c.irEst : null;
+  return `<div class="row closed">
+    <div class="who">${avatar(t.ativo)}<div>
+      <div class="tk">${esc(t.ativo)}</div>
+      <div class="meta num">${inteiro(t.qtd)} · ${brl(t.precoCompra)} → ${brl(t.precoVenda)}</div>
+      <div class="chips"><span class="chip ${c.tipo === 'DT' ? 'dt' : 'sw'}">${c.tipo === 'DT' ? 'Day trade' : 'Swing'}</span>${passouLimite(t) ? '<span class="chip red">Passou do limite</span>' : ''}</div>
+    </div></div>
+    <div class="cell inv"><div class="lbl">Custos</div><div class="v num">−${brl(c.custos)}</div></div>
+    <div class="cell"><div class="lbl">Antes do IR</div><div class="v num ${cor(c.res)}">${brlSinal(c.res)} <span class="small">(${pctSinal(c.pct)})</span></div></div>
+    <div class="cell r"><div class="lbl">${liq != null ? 'Líquido estimado' : 'IR swing'}</div>${liq != null ? `<div class="big num ${cor(liq)}">${brlSinal(liq)}</div>` : '<div class="muted small">calculado no mês (aba Imposto)</div>'}</div>
+    <div class="acts"><button class="btn ghost sm" data-edit="${t.id}">Editar</button></div>
+  </div>`;
+}
+
+function linhasCalc(c) {
+  const linhaIR = c.tipo === 'DT'
+    ? `<div><span>IR estimado (${num(S().irDT, 0)}%)</span><span>${c.irEst > 0 ? '−' + brl(c.irEst) : brl(0)}</span></div>
+       <div class="tot"><span>Líquido estimado</span><span class="${cor(c.res - c.irEst)}">${brlSinal(c.res - c.irEst)}</span></div>`
+    : `<div class="muted small"><span>IR de swing depende do total de vendas do mês (veja a aba Imposto).</span></div>`;
+  return `<div><span>Resultado bruto</span><span class="${cor(c.bruto)}">${brlSinal(c.bruto)}</span></div>
+    <div><span>Custos (taxas B3 + corretagem)</span><span>−${brl(c.custos)}</span></div>
+    <div class="${c.tipo === 'DT' ? '' : 'tot'}"><span>Antes do IR</span><span class="${cor(c.res)}">${brlSinal(c.res)} <span class="small">(${pctSinal(c.pct)})</span></span></div>
+    ${linhaIR}`;
+}
+
+function atualizarPreviewNova() {
+  const q = lerInteiro($('#nQtd').value), p = lerNumero($('#nPreco').value);
+  const el = $('#nPreview');
+  if (q > 0 && p > 0) {
+    const v = q * p;
+    const cap = capitalEm(hojeISO()), lim = limiteOpReais(), pLim = p - lim / q;
+    el.innerHTML = `Valor da compra <b style="color:var(--text)">${brl(v)}</b>${cap > 0 ? ` · ${pct(v / cap, 0)} do capital` : ''}`
+      + (lim > 0 && pLim > 0 ? `<br>Limite de perda (${brl(lim)}) se cair para ${brl(pLim)} (${pctSinal(pLim / p - 1)})` : '');
+  } else el.textContent = 'Preencha quantidade e preço para ver o valor da compra.';
+}
+
+/* ================= Render: Histórico ================= */
+function renderHistorico() {
+  const fMes = $('#fMes'), fAtivo = $('#fAtivo');
+  const selMes = fMes.value, selAtivo = fAtivo.value;
+  const ref = t => (fechada(t) ? t.dataVenda : t.dataCompra).slice(0, 7);
+  const meses = [...new Set(state.trades.map(ref))].sort().reverse();
+  const ativos = [...new Set(state.trades.map(t => t.ativo))].sort();
+  fMes.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option value="${m}">${fmtMes(m)}</option>`).join('');
+  fAtivo.innerHTML = '<option value="">Todos</option>' + ativos.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  if (meses.includes(selMes)) fMes.value = selMes;
+  if (ativos.includes(selAtivo)) fAtivo.value = selAtivo;
+
+  const fT = $('#fTipo').value, fS = $('#fStatus').value;
+  const lista = state.trades.filter(t =>
+    (!fMes.value || ref(t) === fMes.value) &&
+    (!fAtivo.value || t.ativo === fAtivo.value) &&
+    (!fT || tipoOp(t) === fT) &&
+    (!fS || (fS === 'aberta') === !fechada(t))
+  ).sort((a, b) => ((b.dataVenda || b.dataCompra) + b.criadoEm).localeCompare((a.dataVenda || a.dataCompra) + a.criadoEm));
+
+  $('#histInfo').textContent = `${lista.length} de ${state.trades.length} operações`;
+  const tbl = $('#tblHist');
+  if (!lista.length) {
+    tbl.innerHTML = `<tbody><tr><td class="l" style="text-align:center;padding:32px" colspan="10"><span class="muted">${state.trades.length ? 'Nenhuma operação com esses filtros.' : 'Nenhuma operação registrada ainda.'}</span></td></tr></tbody>`;
+    return;
+  }
+  let totRes = 0, totCustos = 0, totNR = 0;
+  const linhas = lista.map(t => {
+    const c = calcOp(t);
+    const tipo = c.fechada ? (c.tipo === 'DT' ? '<span class="chip dt">Day trade</span>' : '<span class="chip sw">Swing</span>') : '<span class="chip open">Aberta</span>';
+    const val = c.fechada ? c.res : c.nr;
+    if (c.fechada) { totRes += c.res; totCustos += c.custos; } else totNR += c.nr;
+    return `<tr>
+      <td class="l first" data-label="Ativo"><div class="who">${avatar(t.ativo)}<b>${esc(t.ativo)}</b>${passouLimite(t) ? '<span class="chip red">Passou do limite</span>' : ''}</div></td>
+      <td class="l" data-label="Tipo">${tipo}</td>
+      <td data-label="Qtd">${inteiro(t.qtd)}</td>
+      <td data-label="Compra">${fmtData(t.dataCompra)} · ${brl(t.precoCompra)}</td>
+      <td data-label="Venda">${c.fechada ? `${fmtData(t.dataVenda)} · ${brl(t.precoVenda)}` : (c.temPA ? `<span class="muted">atual ${brl(c.pa)}</span>` : '—')}</td>
+      <td data-label="Custos">${c.fechada ? brl(c.custos) : '—'}</td>
+      <td data-label="${c.fechada ? 'Resultado (antes IR)' : 'Em aberto'}" class="${cor(val)}"><b>${brlSinal(val)}</b>${c.fechada ? '' : '<div class="hint">em aberto</div>'}</td>
+      <td data-label="%" class="${cor(val)}">${pctSinal(c.pct)}</td>
+      <td class="l motivo" data-label="Motivo" title="${esc(t.motivo)}">${esc(t.motivo) || '—'}</td>
+      <td data-label="Ações" style="white-space:nowrap"><div class="acts"><button class="btn ghost sm" data-edit="${t.id}">Editar</button><button class="btn ghost sm" data-del="${t.id}" style="color:var(--neg)">Excluir</button></div></td>
+    </tr>`;
+  }).join('');
+  tbl.innerHTML = `<thead><tr><th class="l">Ativo</th><th class="l">Tipo</th><th>Qtd</th><th>Compra</th><th>Venda</th><th>Custos</th><th>Resultado</th><th>%</th><th class="l">Motivo</th><th></th></tr></thead>
+    <tbody>${linhas}</tbody>
+    <tfoot><tr><td class="l first" data-label="">Total filtrado</td><td class="l" data-label=""></td><td data-label=""></td><td data-label=""></td><td data-label=""></td>
+      <td data-label="Custos">${brl(totCustos)}</td><td data-label="Realizado (antes IR)" class="${cor(totRes)}">${brlSinal(totRes)}</td>
+      <td data-label="Em aberto" class="${cor(totNR)}">${totNR ? brlSinal(totNR) + ' <span class="hint">aberto</span>' : ''}</td><td data-label=""></td><td data-label=""></td></tr></tfoot>`;
+}
+
+/* ================= Render: Imposto ================= */
+function renderImposto(st) {
+  const tbl = $('#tblIR'), lista = st.meses.slice().reverse(), hoje = hojeISO();
+  const resumo = $('#irResumo');
+  if (!lista.length) {
+    resumo.innerHTML = '';
+    tbl.innerHTML = '<tbody><tr><td class="l" style="text-align:center;padding:32px"><span class="muted">Nenhuma venda registrada ainda.</span></td></tr></tbody>'; return;
+  }
+  const ult = lista[0];
+  const emAberto = st.meses.filter(m => m.aPagar && !m.pagaEm);
+  const vencidas = emAberto.filter(m => m.venc < hoje);
+  const dicaDarf = emAberto.length ? emAberto.map(m => `${fmtMes(m.ym)}: ${brl(m.darf)}, vence ${fmtData(m.venc)}`).join(' · ') + '. Marque como paga na tabela.'
+    : ult.adiada ? `${brl(ult.darf)} de ${fmtMes(ult.ym)} ficou abaixo de R$ 10: acumula para o mês seguinte.` : 'Nenhuma DARF em aberto.';
+  resumo.innerHTML = `<div class="kpis">
+    ${kpi('DARF a pagar', brl(emAberto.reduce((a, m) => a + m.darf, 0)), dicaDarf, '', vencidas.length ? 'alert' : emAberto.length ? 'warnc' : '', vencidas.length ? 'DARF vencida' : '')}
+    ${kpi('Prejuízo day trade a compensar', brl(ult.prejDT), 'Abate lucros futuros de day trade.')}
+    ${kpi('Prejuízo swing a compensar', brl(ult.prejSW), 'Abate lucros futuros de swing tributado.')}
+    ${kpi('IR total devido', brl(st.irTotal), `Soma de todas as apurações (inclui o IRRF retido).${ult.creditoIRRF > 0 ? ` IRRF a compensar nos próximos meses: ${brl(ult.creditoIRRF)}.` : ''}`)}
+  </div>`;
+  const isen = m => m.nSW === 0 ? '—' : m.isento ? '<span class="pos">Isento</span>' : 'Tributado';
+  tbl.innerHTML = `<thead>
+    <tr class="grp"><th></th><th colspan="3"><span>Day trade</span></th><th colspan="5"><span>Swing</span></th><th colspan="4"><span>DARF</span></th><th colspan="3"><span>Resultado do mês</span></th></tr>
+    <tr><th class="l">Mês</th><th>Resultado</th><th>Prej. a comp.</th><th>IR</th><th>Resultado</th><th title="Todas as vendas de ações do mês, inclusive day trade">Vendas no mês</th><th>Situação</th><th>Prej. a comp.</th><th>IR</th><th>IRRF abatido</th><th>A pagar</th><th>Vence</th><th>Pagamento</th><th>Líquido</th><th>%</th><th>Acumulado</th></tr></thead>
+  <tbody>${lista.map(m => `<tr>
+    <td class="l first" data-label="Mês"><b>${fmtMes(m.ym)}</b></td>
+    <td data-label="Resultado day trade" class="${cor(m.dt)}">${m.nDT ? brlSinal(m.dt) : '—'}</td>
+    <td data-label="Prejuízo DT a compensar">${brl(m.prejDT)}</td>
+    <td data-label="IR day trade">${brl(m.irDT)}</td>
+    <td data-label="Resultado swing" class="${cor(m.sw)}">${m.nSW ? brlSinal(m.sw) : '—'}</td>
+    <td data-label="Vendas de ações no mês">${brl(m.vendas)}</td>
+    <td data-label="Swing isento?">${isen(m)}</td>
+    <td data-label="Prejuízo swing a compensar">${brl(m.prejSW)}</td>
+    <td data-label="IR swing">${brl(m.irSW)}</td>
+    <td data-label="IRRF abatido">${m.irrfAbatido > 0 ? '−' + brl(m.irrfAbatido) : brl(0)}</td>
+    <td data-label="DARF a pagar"${m.pendenteAnterior > 0 ? ` title="Inclui ${brl(m.pendenteAnterior)} acumulado de meses anteriores"` : ''}><b>${brl(m.darf)}</b>${m.adiada ? ' <span class="muted small">(&lt; R$ 10, acumula)</span>' : m.pendenteAnterior > 0 ? ` <span class="muted small">(inclui ${brl(m.pendenteAnterior)} acumulado)</span>` : ''}</td>
+    <td data-label="Vencimento">${m.darf > 0 && !m.adiada ? fmtData(m.venc) : '—'}</td>
+    <td data-label="Pagamento">${!m.aPagar ? '—' : m.pagaEm
+      ? `<span class="pos">Paga em ${fmtData(m.pagaEm)}</span> <button class="btn link" type="button" data-darf="${m.ym}">desfazer</button>`
+      : `${m.venc < hoje ? '<span class="chip red">Vencida</span> ' : ''}<button class="btn sm" type="button" data-darf="${m.ym}">Marcar como paga</button>`}</td>
+    <td data-label="Líquido do mês" class="${cor(m.liquido)}"><b>${brlSinal(m.liquido)}</b></td>
+    <td data-label="% do mês" class="${cor(m.liquido)}" title="Sobre ${brl(m.capitalBase)} no começo do mês"><b>${pctSinal(m.pctMes)}</b></td>
+    <td data-label="Acumulado" class="${cor(m.acum)}">${brlSinal(m.acum)}</td>
+  </tr>`).join('')}</tbody>`;
+}
+
+/* ================= Render: Painel ================= */
+function kpi(label, value, hint, cls = '', extra = '', flag = '') {
+  return `<div class="kpi ${extra}"><div class="label">${label}</div><div class="value num ${cls}">${value}</div><div class="hint">${hint}</div>${flag ? `<span class="flag">${flag}</span>` : ''}</div>`;
+}
+function secao(titulo, desc, corpo) {
+  return `<div class="sec"><div class="sec-head"><h2>${titulo}</h2><p>${desc}</p></div><div class="kpis">${corpo}</div></div>`;
+}
+
+function renderPainel(st) {
+  const s = S();
+  const presoPct = st.capitalAtual > 0 ? st.preso / st.capitalAtual : NaN;
+  const semPerdas = st.nPerdas === 0;
+  const temFech = st.fech.length > 0;
+  const ymAtual = hojeISO().slice(0, 7);
+  const mAtual = st.meses.find(m => m.ym === ymAtual);
+  const cdiMes = Math.pow(1 + s.cdi / 100, 1 / 12) - 1;
+  const pctAtual = mAtual ? mAtual.pctMes : 0;
+
+  // 1. Resultado
+  let res = '';
+  res += kpi(`Rendeu em ${fmtMes(ymAtual)}`, mAtual ? pctSinal(pctAtual) : '0,00%',
+    `${mAtual ? brlSinal(mAtual.liquido) + ' líquido no mês. ' : 'Nenhuma venda neste mês ainda. '}CDI de um mês cheio ≈ ${pct(cdiMes)}.`,
+    cor(pctAtual), mAtual && pctAtual < cdiMes ? 'warnc' : '', mAtual && pctAtual < cdiMes ? 'Abaixo do CDI' : '');
+  res += kpi('Custos totais pagos', brl(st.custos), 'Taxas da B3 + corretagem. Sai do seu bolso em todo trade.');
+  res += kpi('IR total', brl(st.irTotal), 'Imposto devido nas apurações mensais (DARF).');
+  res += kpi('Realizado antes do IR', brlSinal(st.somaRes), 'Vendas após custos, antes do imposto.', cor(st.somaRes));
+
+  $('#painel').innerHTML = `<div class="sec">${heroHTML(st)}<div class="kpis">${res}</div></div>`;
+
+  // 2. Desempenho
+  let des = '';
+  des += kpi('Operações fechadas', `${st.fech.length}`, `${st.nDT} day trade · ${st.nSW} swing.`, '', st.alertaSwing ? 'alert' : '', st.alertaSwing ? 'Operações rápidas virando posições longas' : '');
+  des += kpi('Taxa de acerto', temFech ? pct(st.acerto, 1) : '—', temFech ? `${st.nGanhos} ganhos em ${st.fech.length} operações fechadas.` : 'Ainda sem operações fechadas.');
+  des += kpi('Ganho médio', st.nGanhos ? brlSinal(st.ganhoMedio) : '—', 'Média das operações com lucro (antes do IR).', 'pos');
+  des += kpi('Perda média', semPerdas ? 'sem perdas ainda' : brlSinal(st.perdaMedia), 'Média das operações com prejuízo.', semPerdas ? '' : 'neg');
+  des += kpi('Payoff', semPerdas ? 'sem perdas ainda' : (st.nGanhos ? num(st.payoff, 2) : '—'), 'Ganho médio ÷ perda média. Acima de 1: ganha mais do que perde por trade.');
+  const ruim = st.perdedora || (!semPerdas && !st.nGanhos);
+  des += kpi('Acerto necessário p/ empatar', semPerdas ? 'sem perdas ainda' : (Number.isFinite(st.acertoNec) ? pct(st.acertoNec, 1) : (st.nGanhos ? '—' : '100%')),
+    'Com esse payoff, você precisa acertar pelo menos isso.', '', ruim ? 'alert' : '', ruim ? 'Sua estratégia perde dinheiro no longo prazo' : '');
+  des += `<div class="kpi wide"><div class="label">Maior ganho × maior perda</div>
+    <div class="pair num"><div><div class="value pos">${st.maiorGanho != null ? brlSinal(st.maiorGanho) : '—'}</div><div class="hint">maior ganho</div></div>
+    <div><div class="value neg">${st.maiorPerda != null ? brlSinal(st.maiorPerda) : '—'}</div><div class="hint">maior perda</div></div></div></div>`;
+
+  // 3. Risco
+  const limiteValor = st.aportado * (1 - s.limiteConta / 100);
+  const folga = st.capitalAtual - limiteValor;
+  let ris = '';
+  ris += kpi('Folga até o limite da conta', brl(Math.max(0, folga)), `Se o capital chegar a ${brl(limiteValor)} (−${num(s.limiteConta, 0)}%), pare de operar.`, folga <= 0 ? 'neg' : '', st.status === 'stop' ? 'alert' : '', st.status === 'stop' ? 'PARAR' : '');
+  ris += kpi('Posições abertas', `${st.abertas.length}`, st.abertas.length ? `Abertas em média há ${num(st.diasMedios, 1)} dias.` : 'Nenhuma no momento.');
+  ris += kpi('Capital preso', brl(st.preso), `${Number.isFinite(presoPct) ? pct(presoPct, 1) : '—'} do capital parado em posições abertas.`);
+  ris += kpi('Em aberto', brlSinal(st.naoReal), 'Lucro/prejuízo das abertas pelo preço atual. Só vira real quando vende.', cor(st.naoReal));
+
+  ris += kpi('Passou do limite', `${st.passou}`, `Operações com perda maior que ${num(s.limiteOp, 1)}% do capital (${brl(limiteOpReais())}).`, st.passou ? 'neg' : '', st.passou ? 'alert' : '');
+
+  $('#painelResto').innerHTML =
+    secao('Desempenho', 'Quão boa é a sua estratégia nas operações fechadas', des) +
+    secao('Risco', 'Quanto está exposto agora e quanto falta para os limites', ris) +
+    gruposHTML(st.fech);
+  renderGraficos(st);
+}
+
+// Resultado das operações fechadas agrupado por ação e por motivo
+function tabelaGrupo(titulo, desc, coluna, fech, chave) {
+  const g = new Map();
+  for (const t of fech) {
+    const [k, nome] = chave(t), c = calcOp(t);
+    if (!g.has(k)) g.set(k, { nome, n: 0, ganhos: 0, res: 0 });
+    const x = g.get(k);
+    x.n++; x.res += c.res; if (c.res > 0) x.ganhos++;
+  }
+  const linhas = [...g.values()].sort((a, b) => b.res - a.res).map(x => `<tr>
+    <td class="l first" data-label="${coluna}"><b>${esc(x.nome)}</b></td>
+    <td data-label="Operações">${x.n}</td>
+    <td data-label="Acerto">${pct(x.ganhos / x.n, 0)}</td>
+    <td data-label="Resultado" class="${cor(x.res)}"><b>${brlSinal(x.res)}</b></td>
+    <td data-label="Média por operação" class="${cor(x.res)}">${brlSinal(x.res / x.n)}</td>
+  </tr>`).join('');
+  return `<div class="sec" style="min-width:0;align-content:start"><div class="sec-head"><h2>${titulo}</h2><p>${desc}</p></div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th class="l">${coluna}</th><th>Operações</th><th>Acerto</th><th>Resultado</th><th>Média</th></tr></thead><tbody>${linhas}</tbody></table></div></div>`;
+}
+function gruposHTML(fech) {
+  if (!fech.length) return '';
+  return `<div class="charts">${tabelaGrupo('Por ação', 'Operações fechadas, antes do IR', 'Ação', fech, t => [t.ativo, t.ativo])}${
+    tabelaGrupo('Por motivo / setup', 'Agrupado pelo texto do motivo', 'Motivo', fech, t => { const m = t.motivo.trim(); return [m.toLowerCase(), m || 'Sem motivo']; })}</div>`;
+}
+
+function renderGraficos(st) {
+  if (!window.Chart) {
+    $$('.chart-box').forEach(b => b.innerHTML = '<p class="muted small">Gráficos indisponíveis (sem internet para carregar o Chart.js).</p>');
+    return;
+  }
+  const css = getComputedStyle(document.documentElement);
+  const v = n => css.getPropertyValue(n).trim();
+  const [corTexto, corGrade, corPos, corNeg, corAcc] = [v('--muted'), v('--border'), v('--pos'), v('--neg'), v('--accent')];
+  const s = S();
+
+  const animacao = SEM_MOVIMENTO ? false : { duration: 700, easing: 'easeOutQuart' };
+  const irMes = {}; st.meses.forEach(m => irMes[m.ym] = m.ir);
+  const hoje = hojeISO(), vendasPorData = {}, movPorData = {};
+  for (const t of st.fech) vendasPorData[t.dataVenda] = (vendasPorData[t.dataVenda] || 0) + calcOp(t).res;
+  for (const m of state.movimentos) if (m.data <= hoje) movPorData[m.data] = (movPorData[m.data] || 0) + m.valor;
+  const ultimaDoMes = {}; Object.keys(vendasPorData).sort().forEach(d => ultimaDoMes[d.slice(0, 7)] = d);
+  const datas = [...new Set([...Object.keys(vendasPorData), ...Object.keys(movPorData)])].sort();
+  const primeiro = [s.dataInicio, ...state.trades.map(t => t.dataCompra), ...datas].sort()[0];
+  // valores: patrimônio; aportes: capital colocado na conta (linha de referência)
+  const labels = [fmtData(primeiro)], valores = [s.capitalInicial], aportes = [s.capitalInicial];
+  let acc = s.capitalInicial, ap = s.capitalInicial;
+  for (const d of datas) {
+    const mov = movPorData[d] || 0;
+    acc += (vendasPorData[d] || 0) + mov; ap += mov;
+    if (ultimaDoMes[d.slice(0, 7)] === d) acc -= irMes[d.slice(0, 7)] || 0;
+    if (d === primeiro) { valores[0] = acc; aportes[0] = ap; continue; }
+    labels.push(fmtData(d)); valores.push(acc); aportes.push(ap);
+  }
+  labels.push('Hoje'); valores.push(acc + st.naoReal); aportes.push(ap);
+
+  Chart.defaults.color = corTexto;
+  Chart.defaults.font.family = 'Manrope, system-ui, sans-serif';
+  Chart.defaults.font.weight = 600;
+  const fmtTick = val => 'R$ ' + num(val, 0);
+  const tooltipBRL = { callbacks: { label: ctx => brl(ctx.parsed.y) } };
+
+  charts.equity && charts.equity.destroy();
+  charts.equity = new Chart($('#chEquity'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Patrimônio', data: valores, borderColor: corAcc, backgroundColor: v('--accent-soft'), fill: true, pointRadius: 3, pointBackgroundColor: corAcc, tension: .25, borderWidth: 2.5 },
+      { label: 'Capital aportado', data: aportes, stepped: true, borderColor: corTexto, borderDash: [4, 4], pointRadius: 0, borderWidth: 1 }
+    ] },
+    options: { maintainAspectRatio: false, animation: animacao, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: tooltipBRL },
+      scales: { x: { grid: { display: false }, border: { display: false } }, y: { grid: { color: corGrade }, border: { display: false }, ticks: { callback: fmtTick } } } }
+  });
+
+  charts.meses && charts.meses.destroy();
+  charts.meses = new Chart($('#chMeses'), {
+    type: 'bar',
+    data: { labels: st.meses.map(m => fmtMes(m.ym)), datasets: [{ label: 'Resultado líquido', data: st.meses.map(m => m.liquido),
+      backgroundColor: st.meses.map(m => m.liquido >= 0 ? corPos : corNeg), borderRadius: 8, maxBarThickness: 44 },
+      // Linha da meta do mês (com um mês só, o ponto precisa aparecer para a linha existir)
+      ...(s.metaMensal > 0 || s.metaPct > 0 ? [{ type: 'line', label: 'Meta', data: st.meses.map(m => metaReais(st, m.ym)), borderColor: corAcc, borderDash: [5, 4], borderWidth: 1.5, pointRadius: st.meses.length === 1 ? 4 : 0, pointBackgroundColor: corAcc }] : [])] },
+    options: { maintainAspectRatio: false, animation: animacao,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.dataset.type === 'line' ? `Meta: ${brl(ctx.parsed.y)}` : `${brlSinal(ctx.parsed.y)} (${pctSinal(st.meses[ctx.dataIndex].pctMes)})` } } },
+      scales: { x: { grid: { display: false }, border: { display: false } }, y: { grid: { color: corGrade }, border: { display: false }, ticks: { callback: fmtTick } } } }
+  });
+}
+
+/* ================= Render: Configurações ================= */
+function renderConfig() {
+  const s = S();
+  const grupos = [...new Set(CAMPOS_CFG.map(c => c.g))];
+  $('#cfgGrid').innerHTML = grupos.map(g => `<div class="cfg-sec"><h2>${g}</h2><div class="cfg-grid">${CAMPOS_CFG.filter(c => c.g === g).map(c => `
+    <label>${c.label}
+      ${c.type === 'date' ? `<input data-cfg="${c.k}" type="date" value="${s[c.k]}">`
+        : `<div class="input-unit">${c.unit === 'R$' ? '<span>R$</span>' : ''}<input data-cfg="${c.k}" inputmode="decimal" value="${paraInput(s[c.k])}">${c.unit === '%' ? '<span>%</span>' : ''}</div>`}
+      <span class="hint">${c.hint}</span>
+    </label>`).join('')}</div></div>`).join('');
+  renderAtivosEditores();
+  renderMovimentos();
+}
+
+/* ================= Ações cadastradas ================= */
+// O mesmo editor aparece nas Configurações e na primeira configuração
+function renderAtivosEditores() {
+  const html = `<div class="chips-edit">${state.ativos.map(a => `<span class="chip tag">${esc(a)}<button type="button" data-rm-ativo="${esc(a)}" aria-label="Remover ${esc(a)}" title="Remover">×</button></span>`).join('') || '<span class="muted small">Nenhuma ação cadastrada ainda.</span>'}</div>
+    <div class="add-ativo"><input data-novo-ativo placeholder="ex.: PETR4" maxlength="7" autocapitalize="characters" spellcheck="false" aria-label="Código da ação"><button class="btn" type="button" data-action="add-ativo">Adicionar</button></div>`;
+  $$('.ativos-editor').forEach(el => el.innerHTML = html);
+}
+
+// Devolve false se o código digitado for inválido
+function adicionarAtivo(editor) {
+  const input = editor.querySelector('[data-novo-ativo]');
+  const tk = input.value.trim().toUpperCase();
+  if (!TICKER_RE.test(tk)) { marcarInvalido(input, true); toast('Use o código da ação na B3, por exemplo PETR4.'); input.focus(); return false; }
+  if (!state.ativos.includes(tk)) { state.ativos.push(tk); state.ativos.sort(); }
+  salvar(); renderAtivos(); renderAtivosEditores();
+  editor.querySelector('[data-novo-ativo]').focus();
+  return true;
+}
+
+function removerAtivo(tk, editor) {
+  state.ativos = state.ativos.filter(a => a !== tk);
+  salvar(); renderAtivos(); renderAtivosEditores();
+  editor.querySelector('[data-novo-ativo]').focus();
+}
+
+/* ================= Primeira configuração ================= */
+function mostrarPassoInicio(n) {
+  passoInicio = n;
+  $$('#formInicio .passo').forEach(p => p.hidden = +p.dataset.passo !== n);
+  $(n === 1 ? '#iCapital' : '#formInicio [data-novo-ativo]').focus();
+}
+
+function abrirInicio() {
+  renderAtivosEditores();
+  $('#dlgInicio').showModal();
+  mostrarPassoInicio(1);
+}
+
+function avancarInicio(e) {
+  e.preventDefault();
+  if (passoInicio === 1) {
+    const el = $('#iCapital'), v = lerNumero(el.value, true);
+    if (marcarInvalido(el, !(v > 0))) { toast('Informe um valor maior que zero.'); return; }
+    state.settings.capitalInicial = v;
+    return mostrarPassoInicio(2);
+  }
+  // Código digitado mas não adicionado: adiciona antes de concluir
+  const editor = $('#formInicio .ativos-editor');
+  if (editor.querySelector('[data-novo-ativo]').value.trim() && !adicionarAtivo(editor)) return;
+  state.settings.dataInicio = hojeISO();
+  state.inicioFeito = true;
+  $('#dlgInicio').close();
+  commit();
+  if (abaAtual === 'config') renderConfig();
+  iniciarTutorial();
+}
+
+/* ================= Tema claro / escuro ================= */
+// Preferência deste computador: fica fora do estado para não ir junto no backup
+const TEMA_KEY = 'diarioTradesB3.tema';
+const ICONE_SOL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const ICONE_LUA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+function temaClaro() { return document.documentElement.dataset.theme === 'light'; }
+
+function aplicarTema(claro) {
+  if (claro) document.documentElement.dataset.theme = 'light'; else delete document.documentElement.dataset.theme;
+  $('meta[name="theme-color"]').content = claro ? '#f3f4f8' : '#0c0e12';
+  $('#btnTema').innerHTML = claro ? ICONE_LUA + 'Modo escuro' : ICONE_SOL + 'Modo claro';
+  if (abaAtual === 'painel' && state) renderPainel(estatisticas()); // os gráficos leem as cores do tema
+}
+
+function alternarTema() {
+  const claro = !temaClaro();
+  try { localStorage.setItem(TEMA_KEY, claro ? 'claro' : 'escuro'); } catch (e) { console.warn(e); }
+  if (!SEM_MOVIMENTO) {
+    const raiz = document.documentElement;
+    raiz.classList.add('trocando-tema');
+    clearTimeout(alternarTema._t); alternarTema._t = setTimeout(() => raiz.classList.remove('trocando-tema'), 350);
+  }
+  aplicarTema(claro);
+}
+
+/* ================= Ações ================= */
+function toast(msg, ms = 3200) {
+  const el = $('#toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function marcarInvalido(input, invalido) { input.setAttribute('aria-invalid', invalido ? 'true' : 'false'); return invalido; }
+
+function trocarAba(aba) {
+  abaAtual = aba;
+  $$('.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + aba));
+  $$('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === aba));
+  $('#pageTitle').textContent = PAGINAS[aba][0];
+  $('#pageSub').textContent = PAGINAS[aba][1];
+  if (aba === 'painel') renderPainel(estatisticas());
+  if (aba === 'config') { renderConfig(); renderBackupAviso(); }
+  window.scrollTo({ top: 0 });
+}
+
+function abrirNova() {
+  $('#formNova').reset(); $('#nData').value = $('#nData').max = hojeISO();
+  $$('#formNova input').forEach(i => i.removeAttribute('aria-invalid'));
+  atualizarPreviewNova();
+  $('#dlgNova').showModal();
+  $('#nAtivo').focus();
+}
+
+function novaOperacao(e) {
+  e.preventDefault();
+  const ativoEl = $('#nAtivo'), qtdEl = $('#nQtd'), precoEl = $('#nPreco'), dataEl = $('#nData');
+  const ativo = ativoEl.value.trim().toUpperCase();
+  const qtd = lerInteiro(qtdEl.value), preco = lerNumero(precoEl.value), data = dataEl.value;
+  let erro = false;
+  erro = marcarInvalido(ativoEl, !ativo) || erro;
+  erro = marcarInvalido(qtdEl, !(qtd > 0)) || erro;
+  erro = marcarInvalido(precoEl, !(preco > 0)) || erro;
+  erro = marcarInvalido(dataEl, !dataValida(data) || data > hojeISO()) || erro;
+  if (erro) { toast('Confira os campos em vermelho.'); return; }
+  state.trades.push({
+    id: uid(), ativo, qtd, precoCompra: preco, dataCompra: data, precoVenda: null, dataVenda: null, precoAtual: null, parteCompra: 1,
+    motivo: $('#nMotivo').value.trim(), criadoEm: new Date().toISOString()
+  });
+  $('#dlgNova').close();
+  commit();
+  $('#formNova').reset(); $('#nData').value = hojeISO();
+  toast(`${ativo} registrada como aberta.`);
+}
+
+function abrirVenda(id) {
+  const t = state.trades.find(x => x.id === id); if (!t) return;
+  vendendoId = id;
+  $('#vTitulo').textContent = `Vender ${t.ativo}`;
+  $('#vSub').textContent = `${inteiro(t.qtd)} × ${brl(t.precoCompra)} · comprada em ${fmtData(t.dataCompra)}`;
+  $('#vPreco').value = paraInput(t.precoAtual);
+  $('#vPreco').removeAttribute('aria-invalid');
+  $('#vQtd').value = t.qtd; $('#vQtd').removeAttribute('aria-invalid');
+  $('#vQtdHint').textContent = `Você tem ${inteiro(t.qtd)}. Vendendo menos, o restante continua aberto.`;
+  const hoje = hojeISO();
+  $('#vData').min = t.dataCompra; $('#vData').max = hoje;
+  $('#vData').value = hoje >= t.dataCompra ? hoje : t.dataCompra;
+  previewVenda();
+  $('#dlgVender').showModal();
+  $('#vPreco').focus(); $('#vPreco').select();
+}
+
+function previewVenda() {
+  const t = state.trades.find(x => x.id === vendendoId); if (!t) return;
+  const p = lerNumero($('#vPreco').value), d = $('#vData').value, q = lerInteiro($('#vQtd').value);
+  const el = $('#vCalc');
+  const msg = !(q > 0) ? 'Digite a quantidade a vender.' : q > t.qtd ? `Você só tem ${inteiro(t.qtd)} nessa posição.`
+    : !dataValida(d) ? 'Escolha a data de venda.' : d < t.dataCompra ? 'A data de venda não pode ser antes da compra.'
+    : d > hojeISO() ? 'A data de venda não pode ser no futuro.' : !(p > 0) ? 'Digite o preço de venda para ver o resultado.' : '';
+  if (msg) { el.innerHTML = `<span class="muted small">${msg}</span>`; return; }
+  const c = calcOp({ ...t, qtd: q, parteCompra: t.parteCompra * q / t.qtd, precoVenda: p, dataVenda: d });
+  el.innerHTML = `<div><span>Tipo</span><b>${c.tipo === 'DT' ? 'Day trade' : 'Swing'}</b></div>${linhasCalc(c)}`
+    + (q < t.qtd ? `<div class="muted small"><span>Continuam abertas</span><span>${inteiro(t.qtd - q)}</span></div>` : '');
+}
+
+function confirmarVenda(e) {
+  e.preventDefault();
+  const t = state.trades.find(x => x.id === vendendoId); if (!t) return;
+  const pEl = $('#vPreco'), dEl = $('#vData'), qEl = $('#vQtd');
+  const p = lerNumero(pEl.value), d = dEl.value, q = lerInteiro(qEl.value);
+  let erro = marcarInvalido(pEl, !(p > 0));
+  erro = marcarInvalido(dEl, !dataValida(d) || d < t.dataCompra || d > hojeISO()) || erro;
+  erro = marcarInvalido(qEl, !(q > 0 && q <= t.qtd)) || erro;
+  if (erro) { toast('Confira os campos em vermelho.'); return; }
+  let vendida = t;
+  if (q < t.qtd) {
+    // Venda parcial: a parte vendida vira uma operação fechada própria e o restante continua aberto.
+    // A corretagem da compra (uma ordem só) é dividida entre as partes.
+    const parte = t.parteCompra * q / t.qtd;
+    vendida = { ...t, id: uid(), qtd: q, parteCompra: parte, criadoEm: new Date().toISOString() };
+    t.qtd -= q; t.parteCompra -= parte;
+    state.trades.push(vendida);
+  }
+  vendida.precoVenda = p; vendida.dataVenda = d;
+  $('#dlgVender').close();
+  commit();
+  const c = calcOp(vendida);
+  toast(`${t.ativo} vendida: ${brlSinal(c.res)} antes do IR` + (c.tipo === 'DT' ? ` · líquido est. ${brlSinal(c.res - c.irEst)}` : '')
+    + (vendida !== t ? ` · restam ${inteiro(t.qtd)} em aberto` : ''), 5000);
+}
+
+function abrirEdicao(id) {
+  const t = state.trades.find(x => x.id === id); if (!t) return;
+  editandoId = id;
+  $('#eAtivo').value = t.ativo; $('#eQtd').value = t.qtd; $('#ePreco').value = paraInput(t.precoCompra);
+  $('#eData').value = t.dataCompra; $('#eVPreco').value = paraInput(t.precoVenda); $('#eVData').value = t.dataVenda || '';
+  $('#ePA').value = paraInput(t.precoAtual); $('#eMotivo').value = t.motivo;
+  $('#eData').max = $('#eVData').max = hojeISO();
+  $$('#formEditar input').forEach(i => i.removeAttribute('aria-invalid'));
+  $('#dlgEditar').showModal();
+}
+
+function salvarEdicao(e) {
+  e.preventDefault();
+  const t = state.trades.find(x => x.id === editandoId); if (!t) return;
+  const g = id => $(id);
+  const ativo = g('#eAtivo').value.trim().toUpperCase();
+  const qtd = lerInteiro(g('#eQtd').value), pc = lerNumero(g('#ePreco').value), dc = g('#eData').value;
+  const pvStr = g('#eVPreco').value.trim(), dvStr = g('#eVData').value, paStr = g('#ePA').value.trim();
+  const pv = pvStr ? lerNumero(pvStr) : null, pa = paStr ? lerNumero(paStr) : null;
+  const temVenda = pvStr !== '' || dvStr !== '';
+  let erro = false;
+  erro = marcarInvalido(g('#eAtivo'), !ativo) || erro;
+  erro = marcarInvalido(g('#eQtd'), !(qtd > 0)) || erro;
+  erro = marcarInvalido(g('#ePreco'), !(pc > 0)) || erro;
+  const hoje = hojeISO();
+  erro = marcarInvalido(g('#eData'), !dataValida(dc) || dc > hoje) || erro;
+  erro = marcarInvalido(g('#eVPreco'), temVenda && !(pv > 0)) || erro;
+  erro = marcarInvalido(g('#eVData'), temVenda && (!dataValida(dvStr) || dvStr < dc || dvStr > hoje)) || erro;
+  erro = marcarInvalido(g('#ePA'), paStr !== '' && !(pa >= 0)) || erro;
+  if (erro) { toast('Confira os campos em vermelho.'); return; }
+  Object.assign(t, {
+    ativo, qtd, precoCompra: pc, dataCompra: dc,
+    precoVenda: temVenda ? pv : null, dataVenda: temVenda ? dvStr : null,
+    precoAtual: pa, motivo: g('#eMotivo').value.trim()
+  });
+  $('#dlgEditar').close();
+  commit();
+  toast('Operação atualizada.');
+}
+
+function excluir(id) {
+  const t = state.trades.find(x => x.id === id); if (!t) return;
+  if (!confirm(`Excluir a operação de ${t.ativo} (${inteiro(t.qtd)} × ${brl(t.precoCompra)} em ${fmtData(t.dataCompra)})?\n\nIsso não pode ser desfeito.`)) return false;
+  state.trades = state.trades.filter(x => x.id !== id);
+  commit();
+  toast('Operação excluída.');
+  return true;
+}
+
+function atualizarPrecoAtual(input, salvarAgora) {
+  const t = state.trades.find(x => x.id === input.dataset.pa); if (!t) return;
+  const str = input.value.trim(), v = str ? lerNumero(str) : null;
+  if (str && !(v >= 0)) { marcarInvalido(input, true); return; }
+  marcarInvalido(input, false);
+  t.precoAtual = v;
+  const card = input.closest('.pos-card'), c = calcOp(t);
+  const nr = card.querySelector('[data-nr]'), nrp = card.querySelector('[data-nrp]');
+  nr.textContent = brlSinal(c.nr); nr.className = 'big num ' + cor(c.nr);
+  nrp.textContent = pctSinal(c.pct); nrp.className = cor(c.nr) + ' small num';
+  card.querySelector('[data-chips]').innerHTML = chipsAberta(t);
+  // A lista de abertas não é redesenhada aqui: trocar o DOM tiraria o foco e engoliria o clique em "Vender"
+  if (salvarAgora) { salvar(); renderTudo(false); }
+}
+
+function salvarConfig(input) {
+  const k = input.dataset.cfg, campo = CAMPOS_CFG.find(c => c.k === k);
+  let v;
+  if (campo.type === 'date') v = dataValida(input.value) ? input.value : null;
+  else { v = lerNumero(input.value, campo.unit === 'R$'); if (!(v >= 0) || (k === 'capitalInicial' && !(v > 0)) || (campo.unit === '%' && v > 100)) v = null; }
+  if (v == null) { marcarInvalido(input, true); toast('Valor inválido.'); return; }
+  if (k === 'capitalInicial' && capitalEm(hojeISO()) - S().capitalInicial + v <= 0) {
+    marcarInvalido(input, true); toast('Com as retiradas registradas, o capital ficaria zerado ou negativo.', 5000); return;
+  }
+  marcarInvalido(input, false);
+  state.settings[k] = v;
+  // Meta em reais e em % são excludentes: preencher uma zera a outra
+  const outraMeta = k === 'metaMensal' ? 'metaPct' : k === 'metaPct' ? 'metaMensal' : null;
+  if (outraMeta && v > 0 && state.settings[outraMeta] > 0) {
+    state.settings[outraMeta] = 0;
+    $(`[data-cfg="${outraMeta}"]`).value = '0';
+  }
+  commit();
+  toast('Configuração salva.', 1500);
+}
+
+/* ================= Simulador de venda ================= */
+// Preço de venda (hoje) que dá o resultado r depois dos custos
+function precoParaResultado(t, r) {
+  const s = S(), vc = t.qtd * t.precoCompra;
+  const taxa = (t.dataCompra === hojeISO() ? s.taxaDT : s.taxaSwing) / 100;
+  return (r + vc * (1 + taxa) + (1 + t.parteCompra) * s.corretagem) / (t.qtd * (1 - taxa));
+}
+
+// Operação sendo simulada: uma posição aberta ou a compra ainda não salva da tela "Nova operação"
+function tradeSim() { return simCompra || state.trades.find(x => x.id === simulandoId); }
+
+function abrirSim(id) {
+  const t = state.trades.find(x => x.id === id); if (!t) return;
+  simulandoId = id; simCompra = null;
+  mostrarSim(t);
+}
+
+function abrirSimCompra() {
+  const qtdEl = $('#nQtd'), precoEl = $('#nPreco');
+  const qtd = lerInteiro(qtdEl.value), preco = lerNumero(precoEl.value), data = $('#nData').value;
+  let erro = marcarInvalido(qtdEl, !(qtd > 0));
+  erro = marcarInvalido(precoEl, !(preco > 0)) || erro;
+  if (erro) { toast('Preencha quantidade e preço de compra para simular.'); return; }
+  simulandoId = null;
+  simCompra = { ativo: $('#nAtivo').value.trim().toUpperCase() || 'compra', qtd, precoCompra: preco, dataCompra: dataValida(data) ? data : hojeISO(), precoVenda: null, dataVenda: null, precoAtual: null, parteCompra: 1 };
+  mostrarSim(simCompra);
+}
+
+function mostrarSim(t) {
+  $('#formSim [type="submit"]').hidden = !!simCompra; // só dá para vender o que já foi comprado
+  $('#sTitulo').textContent = `Simular venda de ${t.ativo}`;
+  $('#sSub').textContent = `${inteiro(t.qtd)} × ${brl(t.precoCompra)} · ${simCompra ? 'compra ainda não registrada' : 'comprada em ' + fmtData(t.dataCompra)}`;
+  $('#sAtalhos').innerHTML = [-3, -2, -1, 1, 2, 3, 5].map(p => `<button class="btn sm" type="button" data-sim-pct="${p}">${p > 0 ? '+' : '−'}${Math.abs(p)}%</button>`).join('')
+    + '<button class="btn sm" type="button" data-sim-alvo="empate" title="Preço em que você sai sem ganhar nem perder, já com os custos">Empate</button>'
+    + '<button class="btn sm" type="button" data-sim-alvo="limite" title="Preço em que a perda chega ao limite por operação">Limite de perda</button>';
+  $('#sPct').value = ''; $('#sPreco').value = t.precoAtual != null ? num(t.precoAtual, 2) : '';
+  $('#sPreco').removeAttribute('aria-invalid');
+  simular('preco');
+  $('#dlgSim').showModal();
+  $('#sPct').focus();
+}
+
+// origem: qual campo o usuário mexeu ('pct' ou 'preco'); o outro é recalculado
+function simular(origem) {
+  const t = tradeSim(); if (!t) return;
+  const pctEl = $('#sPct'), precoEl = $('#sPreco'), box = $('#sCalc');
+  let p;
+  if (origem === 'pct') {
+    const v = lerNumero(pctEl.value.replace('−', '-'));
+    p = Number.isFinite(v) ? Math.round(t.precoCompra * (1 + v / 100) * 100) / 100 : NaN; // preço em centavos, como na B3
+    precoEl.value = p > 0 ? num(p, 2) : '';
+  } else {
+    p = lerNumero(precoEl.value);
+    pctEl.value = p > 0 ? num((p / t.precoCompra - 1) * 100, 2) : '';
+  }
+  if (!(p > 0)) { box.innerHTML = '<span class="muted small">Digite quantos % quer ganhar (ou aceita perder) para ver o preço, ou o preço para ver quantos % dá.</span>'; return; }
+  const c = calcOp({ ...t, precoVenda: p, dataVenda: hojeISO() }), lim = limiteOpReais();
+  box.innerHTML = `<div><span>Vendendo a</span><b>${brl(p)} <span class="${cor(p - t.precoCompra)}">(${pctSinal(p / t.precoCompra - 1)})</span></b></div>
+    <div><span>Tipo, se vender hoje</span><b>${c.tipo === 'DT' ? 'Day trade' : 'Swing'}</b></div>${linhasCalc(c)}`
+    + (c.res < -lim - 1e-9 ? `<div class="neg small"><span>Passa do limite de perda por operação (${brl(lim)}).</span></div>` : '');
+}
+
+function atalhoSim(b) {
+  const t = tradeSim(); if (!t) return;
+  if (b.dataset.simPct) { $('#sPct').value = b.dataset.simPct; return simular('pct'); }
+  // Arredonda para cima: no centavo de baixo o resultado ficaria pior que o alvo
+  const alvo = precoParaResultado(t, b.dataset.simAlvo === 'limite' ? -limiteOpReais() : 0);
+  $('#sPreco').value = num(Math.max(0.01, Math.ceil(alvo * 100 - 1e-6) / 100), 2);
+  simular('preco');
+}
+
+function venderPeloSimulado(e) {
+  e.preventDefault();
+  if (simCompra) return;
+  const el = $('#sPreco'), id = simulandoId;
+  if (marcarInvalido(el, !(lerNumero(el.value) > 0))) { toast('Informe a valorização ou o preço.'); return; }
+  $('#dlgSim').close();
+  abrirVenda(id);
+  $('#vPreco').value = el.value; previewVenda();
+}
+
+/* ================= Aportes e retiradas ================= */
+function renderMovimentos() {
+  const s = S(), movs = state.movimentos.slice().sort((a, b) => b.data.localeCompare(a.data));
+  const soma = movs.reduce((a, m) => a + m.valor, 0);
+  $('#listaMov').innerHTML = (movs.length ? movs.map(m => `<div class="mov-row">
+      <span class="num">${fmtData(m.data)}</span>
+      <span><span class="chip ${m.valor > 0 ? 'open' : 'red'}">${m.valor > 0 ? 'Aporte' : 'Retirada'}</span></span>
+      <b class="num ${cor(m.valor)}">${brlSinal(m.valor)}</b>
+      <span class="muted small nota" title="${esc(m.nota)}">${esc(m.nota)}</span>
+      <button class="btn ghost sm" type="button" data-del-mov="${m.id}" style="color:var(--neg)">Excluir</button>
+    </div>`).join('') : '<span class="muted small">Nenhum aporte ou retirada registrado.</span>')
+    + `<div class="small num" style="margin-top:10px">Capital aportado: <b>${brl(s.capitalInicial + soma)}</b> <span class="muted">(inicial ${brl(s.capitalInicial)}${movs.length ? `, movimentações ${brlSinal(soma)}` : ''})</span></div>`;
+}
+
+function abrirMov() {
+  $('#formMov').reset();
+  $$('#formMov input').forEach(i => i.removeAttribute('aria-invalid'));
+  const hoje = hojeISO(), ini = S().dataInicio;
+  $('#mData').value = $('#mData').max = hoje; $('#mData').min = ini <= hoje ? ini : hoje;
+  $('#dlgMov').showModal();
+  $('#mValor').focus();
+}
+
+function salvarMov(e) {
+  e.preventDefault();
+  const vEl = $('#mValor'), dEl = $('#mData'), hoje = hojeISO();
+  const v = lerNumero(vEl.value, true), d = dEl.value;
+  let erro = marcarInvalido(vEl, !(v > 0));
+  const dataRuim = !dataValida(d) || d > hoje || d < S().dataInicio;
+  erro = marcarInvalido(dEl, dataRuim) || erro;
+  if (erro) { toast(dataRuim && v > 0 ? `A data deve ficar entre o início (${fmtData(S().dataInicio)}) e hoje.` : 'Confira os campos em vermelho.', 5000); return; }
+  const valor = $('#mTipoR').checked ? -v : v;
+  if (capitalEm(hoje) + valor <= 0) { marcarInvalido(vEl, true); toast(`A retirada precisa ser menor que o capital aportado (${brl(capitalEm(hoje))}).`, 5000); return; }
+  state.movimentos.push({ id: uid(), data: d, valor, nota: $('#mNota').value.trim() });
+  $('#dlgMov').close();
+  commit(); renderMovimentos();
+  toast(valor > 0 ? 'Aporte registrado.' : 'Retirada registrada.');
+}
+
+function excluirMov(id) {
+  const m = state.movimentos.find(x => x.id === id); if (!m) return;
+  if (capitalEm(hojeISO()) - m.valor <= 0) { toast('Sem esse aporte o capital ficaria zerado ou negativo. Exclua antes uma retirada.', 5000); return; }
+  if (!confirm(`Excluir ${m.valor > 0 ? 'o aporte' : 'a retirada'} de ${brl(Math.abs(m.valor))} em ${fmtData(m.data)}?`)) return;
+  state.movimentos = state.movimentos.filter(x => x.id !== id);
+  commit(); renderMovimentos();
+  toast('Movimentação excluída.');
+}
+
+/* ================= DARF paga ================= */
+function alternarDarf(ym) {
+  if (state.darfPagas[ym]) delete state.darfPagas[ym]; else state.darfPagas[ym] = hojeISO();
+  commit();
+}
+
+/* ================= Tutorial guiado ================= */
+// sel: elemento destacado (sem sel = balão no centro); aba: aba que precisa estar aberta no passo
+const TOUR = [
+  { titulo: 'Bem-vindo à Wessel Trading', texto: 'Este é um tour rápido, de um minuto, pelas partes principais do sistema. Use "Próximo" para avançar ou "Pular tutorial" para sair.' },
+  { aba: 'hoje', sel: '.pagehead [data-action="nova"]', titulo: 'Nova operação', texto: 'É aqui que você registra cada compra: ação, quantidade e preço. Dentro dela, o botão "Simular venda" mostra quanto você ganha ou perde em cada preço antes de comprar. Atalho: tecla N.' },
+  { aba: 'hoje', sel: '#resumoHoje .hero', titulo: 'Seu patrimônio', texto: 'O resumo da conta. "Realizado" é o que já foi vendido, depois de custos e imposto. "Em aberto" é o que ainda pode mudar. A soma dos dois é o seu resultado de verdade, comparado com o CDI.' },
+  { aba: 'hoje', sel: '#metaMes', titulo: 'Meta do mês', texto: 'Defina quanto quer lucrar por mês, em reais ou em porcentagem. A barra mostra o quanto já foi atingido, quanto falta e quanto precisa fazer por dia.' },
+  { aba: 'hoje', sel: '#cardAbertas', titulo: 'Posições abertas', texto: 'Cada compra fica aqui até ser vendida. Digite o "Preço atual" para ver o lucro ou prejuízo. "Simular" calcula o preço para uma % (ou a % para um preço), "Vender" fecha a posição inteira ou só uma parte, e "Editar" corrige ou exclui.' },
+  { aba: 'historico', sel: '[data-tab="historico"]', titulo: 'Histórico', texto: 'Todas as operações, abertas e fechadas, com custos e resultado de cada uma. Dá para filtrar por mês, ação, tipo e situação.' },
+  { aba: 'painel', sel: '[data-tab="painel"]', titulo: 'Painel', texto: 'Os números da sua estratégia: gráficos de patrimônio e de resultado por mês, taxa de acerto, ganho e perda médios, risco e o resultado separado por ação e por motivo.' },
+  { aba: 'imposto', sel: '[data-tab="imposto"]', titulo: 'Imposto', texto: 'A apuração de cada mês: quanto de imposto é devido, o valor da DARF e o vencimento. Depois de pagar, marque a DARF como paga para não esquecer nem pagar duas vezes.' },
+  { aba: 'config', sel: '[data-tab="config"]', titulo: 'Configurações', texto: 'Aqui você muda o capital inicial, a meta, as taxas e os limites de risco. Também registra aportes e retiradas e cadastra as ações que opera.' },
+  { aba: 'config', sel: '#autoBox', titulo: 'Backup dos dados', texto: 'Seus dados ficam só neste navegador. Ative o backup automático para gravar uma cópia em um arquivo do computador a cada alteração: se o navegador for limpo, é só importar esse arquivo.' },
+  { aba: 'hoje', sel: '#status', titulo: 'Situação da conta', texto: 'Verde: tudo dentro dos limites. Amarelo: você está rendendo menos que o CDI. Vermelho com "PARAR": a conta atingiu o limite de perda definido nas Configurações.' },
+  { aba: 'hoje', sel: '#btnTema', titulo: 'Modo claro e escuro', texto: 'Troca as cores do sistema. A escolha fica salva neste computador.' },
+  { aba: 'hoje', sel: '#btnTutorial', titulo: 'Pronto!', texto: 'Sempre que quiser rever esta explicação, clique em "Tutorial". Agora é só registrar sua primeira operação.' }
+];
+
+// Primeiro elemento visível que casa com o seletor (o menu lateral some em telas pequenas e dá lugar ao de baixo)
+function alvoTour(p) { return p.sel ? $$(p.sel).find(el => el.getClientRects().length > 0) || null : null; }
+
+function iniciarTutorial() {
+  $$('dialog[open]').forEach(d => d.close());
+  $('#tour').hidden = false;
+  // Enquanto o tutorial está aberto, a página por baixo não recebe cliques nem foco
+  $('.app').inert = true; $('.bottomnav').inert = true;
+  mostrarPassoTour(0);
+}
+
+function mostrarPassoTour(i) {
+  tourIdx = i;
+  const p = TOUR[i], ultimo = i === TOUR.length - 1;
+  if (p.aba && abaAtual !== p.aba) trocarAba(p.aba);
+  $('#tourPasso').textContent = `${i + 1} de ${TOUR.length}`;
+  $('#tourTitulo').textContent = p.titulo;
+  $('#tourTexto').textContent = p.texto;
+  $('#tourVoltar').hidden = i === 0;
+  $('#tourPular').hidden = ultimo;
+  $('#tourProx').textContent = ultimo ? 'Concluir' : i === 0 ? 'Começar' : 'Próximo';
+  const alvo = alvoTour(p);
+  if (alvo) alvo.scrollIntoView({ block: 'center', behavior: 'instant' });
+  posicionarTour();
+  $('#tourProx').focus();
+}
+
+// Coloca o foco sobre o elemento e o balão ao lado dele, sem sair da tela
+function posicionarTour() {
+  if (tourIdx < 0) return;
+  const alvo = alvoTour(TOUR[tourIdx]), foco = $('#tourFoco'), balao = $('#tourBalao');
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const bw = balao.offsetWidth, bh = balao.offsetHeight, MARGEM = 6, VAO = 14;
+  let top, left;
+  foco.classList.toggle('sem-alvo', !alvo);
+  if (!alvo) {
+    Object.assign(foco.style, { top: vh / 2 + 'px', left: vw / 2 + 'px', width: '0px', height: '0px' });
+    top = (vh - bh) / 2; left = (vw - bw) / 2;
+  } else {
+    const r = alvo.getBoundingClientRect();
+    // Elementos maiores que a tela são cortados na borda visível
+    const t = Math.max(r.top - MARGEM, 4), l = Math.max(r.left - MARGEM, 4);
+    const b = Math.min(r.bottom + MARGEM, vh - 4), d = Math.min(r.right + MARGEM, vw - 4);
+    Object.assign(foco.style, { top: t + 'px', left: l + 'px', width: Math.max(0, d - l) + 'px', height: Math.max(0, b - t) + 'px' });
+    // Preferência: abaixo, acima, à direita, à esquerda; se não couber, no canto de baixo por cima do elemento
+    if (b + VAO + bh <= vh - 8) { top = b + VAO; left = l; }
+    else if (t - VAO - bh >= 8) { top = t - VAO - bh; left = l; }
+    else if (d + VAO + bw <= vw - 8) { top = t; left = d + VAO; }
+    else if (l - VAO - bw >= 8) { top = t; left = l - VAO - bw; }
+    else { top = vh - bh - 16; left = vw - bw - 16; }
+  }
+  balao.style.top = Math.max(8, Math.min(top, vh - bh - 8)) + 'px';
+  balao.style.left = Math.max(8, Math.min(left, vw - bw - 8)) + 'px';
+}
+
+function terminarTutorial() {
+  if (tourIdx < 0) return;
+  tourIdx = -1;
+  $('#tour').hidden = true;
+  $('.app').inert = false; $('.bottomnav').inert = false;
+  if (abaAtual !== 'hoje') trocarAba('hoje');
+  if (!state.tutorialVisto) { state.tutorialVisto = true; salvar(); }
+}
+
+/* ================= Backup ================= */
+function baixar(nome, conteudo, tipo) {
+  const blob = new Blob([conteudo], { type: tipo });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function dadosBackup(agora = new Date()) {
+  return { app: 'diario-trades-b3', versao: 1, exportadoEm: agora.toISOString(), settings: state.settings, ativos: state.ativos, movimentos: state.movimentos, darfPagas: state.darfPagas, inicioFeito: state.inicioFeito, tutorialVisto: state.tutorialVisto, trades: state.trades };
+}
+
+function exportarJSON() {
+  const agora = new Date();
+  baixar(`backup-trades-${hojeISO()}.json`, JSON.stringify(dadosBackup(agora), null, 2), 'application/json');
+  state.lastBackup = agora.toISOString();
+  salvar(); renderBackupAviso();
+  toast('Backup exportado. Guarde o arquivo em local seguro.');
+}
+
+function exportarCSV() {
+  const n = v => v == null || !Number.isFinite(v) ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
+  const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+  const head = ['Ativo', 'Situação', 'Tipo', 'Quantidade', 'Data compra', 'Preço compra', 'Data venda', 'Preço venda', 'Valor compra', 'Valor venda', 'Custos', 'Resultado antes IR', 'Preço atual', 'Não realizado', 'Motivo'];
+  const linhas = state.trades.slice().sort((a, b) => a.dataCompra.localeCompare(b.dataCompra)).map(t => {
+    const c = calcOp(t);
+    return [q(t.ativo), c.fechada ? 'Fechada' : 'Aberta', c.fechada ? (c.tipo === 'DT' ? 'Day trade' : 'Swing') : '', t.qtd,
+      fmtData(t.dataCompra), String(t.precoCompra).replace('.', ','), t.dataVenda ? fmtData(t.dataVenda) : '', t.precoVenda != null ? String(t.precoVenda).replace('.', ',') : '',
+      n(c.vc), c.fechada ? n(c.vv) : '', c.fechada ? n(c.custos) : '', c.fechada ? n(c.res) : '',
+      t.precoAtual != null ? String(t.precoAtual).replace('.', ',') : '', c.fechada ? '' : n(c.nr), q(t.motivo)].join(';');
+  });
+  baixar(`operacoes-${hojeISO()}.csv`, '\uFEFF' + [head.join(';'), ...linhas].join('\r\n'), 'text/csv;charset=utf-8');
+  toast('CSV exportado.');
+}
+
+function importarArquivo(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let d;
+    try { d = JSON.parse(reader.result); }
+    catch (e) { alert('Arquivo inválido: não é um JSON legível. Nada foi alterado.'); return; }
+    const v = validarDados(d);
+    if (!v.ok) { alert('Backup inválido — nada foi alterado.\n\n' + v.erro); return; }
+    const quando = d.exportadoEm ? ` (exportado em ${new Date(d.exportadoEm).toLocaleString('pt-BR')})` : '';
+    if (!confirm(`Substituir seus dados atuais (${state.trades.length} operações) pelo backup com ${d.trades.length} operações${quando}?\n\nOs dados atuais serão substituídos.`)) return;
+    substituirDados(d);
+    toast(`Backup importado: ${state.trades.length} operações.`);
+  };
+  reader.onerror = () => alert('Não foi possível ler o arquivo.');
+  reader.readAsText(file);
+}
+
+// d já deve ter passado por validarDados
+function substituirDados(d) {
+  try { localStorage.setItem(STORAGE_KEY + '.antesDoImport', JSON.stringify(state)); } catch (_) {}
+  const novo = normalizar(d);
+  novo.lastBackup = state.lastBackup || novo.lastBackup;
+  novo.inicioFeito = true; // quem restaura um backup não precisa da primeira configuração
+  state = novo;
+  commit();
+  if (abaAtual === 'config') renderConfig();
+  if ($('#dlgInicio').open) $('#dlgInicio').close();
+}
+
+/* ================= Backup automático em arquivo ================= */
+// A cada alteração salva, grava uma cópia em um arquivo escolhido pelo usuário (File System Access API,
+// só em navegadores Chromium). O "handle" do arquivo fica no IndexedDB; a permissão de escrita pode
+// precisar ser confirmada de novo a cada sessão, por isso o estado "pausado".
+function idbHandle(modo, valor) {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('diarioTradesB3', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('kv');
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('kv', modo === 'get' ? 'readonly' : 'readwrite');
+      const st = tx.objectStore('kv');
+      const r = modo === 'get' ? st.get('backupHandle') : modo === 'set' ? st.put(valor, 'backupHandle') : st.delete('backupHandle');
+      tx.oncomplete = () => { db.close(); resolve(r.result); };
+      tx.onerror = tx.onabort = () => { db.close(); reject(tx.error); };
+    };
+  });
+}
+
+async function gravarAuto() {
+  // Diário vazio nunca sobrescreve o arquivo: protege o backup se os dados do navegador se perderem
+  if (auto.status !== 'ativo' || !state.trades.length) return;
+  if (auto.gravando) { auto.pendente = true; return; }
+  auto.gravando = true;
+  try {
+    do {
+      auto.pendente = false;
+      const w = await auto.handle.createWritable();
+      await w.write(JSON.stringify(dadosBackup(), null, 2));
+      await w.close();
+      auto.ultimo = new Date();
+    } while (auto.pendente);
+  } catch (e) {
+    console.error('Falha no backup automático', e);
+    auto.status = 'pausado';
+    toast('Backup automático pausado: não foi possível gravar no arquivo.', 6000);
+  }
+  auto.gravando = false;
+  renderBackupAviso();
+}
+
+// Diário vazio + arquivo com operações = provável perda dos dados do navegador
+async function oferecerRestauracao() {
+  if (state.trades.length) return;
+  try {
+    const d = JSON.parse(await (await auto.handle.getFile()).text());
+    if (!validarDados(d).ok || !d.trades.length) return;
+    if (!confirm(`O arquivo de backup automático tem ${d.trades.length} operações e o diário está vazio.\n\nRestaurar as operações do arquivo?`)) return;
+    substituirDados(d);
+    toast(`Backup restaurado: ${state.trades.length} operações.`);
+  } catch (_) { /* arquivo novo, vazio ou ilegível: nada a restaurar */ }
+}
+
+async function escolherArquivoAuto() {
+  let h;
+  try {
+    h = await window.showSaveFilePicker({ suggestedName: 'diario-trades-backup.json', types: [{ description: 'Backup da Wessel Trading', accept: { 'application/json': ['.json'] } }] });
+  } catch (e) {
+    if (e.name !== 'AbortError') { console.error(e); toast('Não foi possível escolher o arquivo.'); }
+    return;
+  }
+  auto.handle = h; auto.status = 'ativo'; auto.ultimo = null;
+  try { await idbHandle('set', h); } catch (e) { console.warn('Não foi possível lembrar o arquivo de backup', e); }
+  await oferecerRestauracao();
+  await gravarAuto();
+  renderBackupAviso();
+  if (auto.status === 'ativo') toast('Backup automático ativado.');
+}
+
+async function reativarAuto() {
+  if (!auto.handle) return;
+  let perm = 'denied';
+  try { perm = await auto.handle.requestPermission({ mode: 'readwrite' }); } catch (e) { console.error(e); }
+  if (perm !== 'granted') { toast('Sem permissão para gravar no arquivo. Tente de novo ou troque o arquivo nas Configurações.', 6000); return; }
+  auto.status = 'ativo';
+  await oferecerRestauracao();
+  await gravarAuto();
+  renderBackupAviso();
+  if (auto.status === 'ativo') toast('Backup automático reativado.');
+}
+
+async function desativarAuto() {
+  auto.handle = null; auto.status = 'off'; auto.ultimo = null;
+  try { await idbHandle('del'); } catch (e) { console.warn(e); }
+  renderBackupAviso();
+  toast('Backup automático desativado. O arquivo já gravado continua no computador.');
+}
+
+// Apaga tudo o que o sistema guardou neste navegador (menos o tema) e recarrega na primeira configuração
+async function apagarTudo() {
+  if (!confirm('Apagar TODOS os dados deste navegador?\n\nOperações, configurações, meta, aportes e ações cadastradas serão apagados e o sistema volta para a primeira configuração. Isso não pode ser desfeito.\n\nO arquivo de backup automático, se existir, continua no computador.')) return;
+  if (state.trades.length && !confirm(`Tem certeza? ${state.trades.length} ${state.trades.length === 1 ? 'operação registrada será apagada' : 'operações registradas serão apagadas'}.`)) return;
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith(STORAGE_KEY)).forEach(k => localStorage.removeItem(k));
+  } catch (e) { console.error(e); toast('Não foi possível apagar os dados do navegador.', 6000); return; }
+  // Desliga o backup automático antes de recarregar, para o arquivo antigo não ser oferecido de volta
+  auto.status = 'off'; auto.handle = null;
+  try { await idbHandle('del'); } catch (e) { console.warn(e); }
+  location.reload();
+}
+
+async function iniciarAuto() {
+  if (!AUTO_OK) return;
+  try {
+    const h = await idbHandle('get');
+    if (!h) return;
+    auto.handle = h;
+    auto.status = (await h.queryPermission({ mode: 'readwrite' })) === 'granted' ? 'ativo' : 'pausado';
+  } catch (e) { console.warn('Backup automático indisponível', e); return; }
+  renderBackupAviso();
+  if (auto.status === 'ativo') { await oferecerRestauracao(); gravarAuto(); }
+}
+
+/* ================= Eventos ================= */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.tab) return trocarAba(b.dataset.tab);
+  if (b.dataset.vender) return abrirVenda(b.dataset.vender);
+  if (b.dataset.edit) return abrirEdicao(b.dataset.edit);
+  if (b.dataset.del) return excluir(b.dataset.del);
+  if (b.dataset.rmAtivo) return removerAtivo(b.dataset.rmAtivo, b.closest('.ativos-editor'));
+  if (b.dataset.sim) return abrirSim(b.dataset.sim);
+  if (b.dataset.simPct || b.dataset.simAlvo) return atalhoSim(b);
+  if (b.dataset.darf) return alternarDarf(b.dataset.darf);
+  if (b.dataset.delMov) return excluirMov(b.dataset.delMov);
+  if (b.hasAttribute('data-close')) return b.closest('dialog').close();
+  const a = b.dataset.action;
+  if (a === 'nova') return abrirNova();
+  if (a === 'exportar-json') return exportarJSON();
+  if (a === 'exportar-csv') return exportarCSV();
+  if (a === 'add-ativo') return adicionarAtivo(b.closest('.ativos-editor'));
+  if (a === 'novo-mov') return abrirMov();
+  if (a === 'meta') return abrirMeta();
+  if (a === 'tutorial') return iniciarTutorial();
+  if (a === 'apagar-tudo') return apagarTudo();
+  if (a === 'sim-compra') return abrirSimCompra();
+  if (a === 'auto-escolher') return escolherArquivoAuto();
+  if (a === 'auto-reativar') return reativarAuto();
+  if (a === 'auto-desativar') return desativarAuto();
+  if (a === 'importar-json') { $('#fileImport').value = ''; return $('#fileImport').click(); }
+});
+
+$('#formNova').addEventListener('submit', novaOperacao);
+$('#btnTema').addEventListener('click', alternarTema);
+['#nQtd', '#nPreco'].forEach(s => $(s).addEventListener('input', atualizarPreviewNova));
+$('#nAtivo').addEventListener('input', e => { const p = e.target.selectionStart; e.target.value = e.target.value.toUpperCase(); e.target.setSelectionRange(p, p); });
+$('#formVender').addEventListener('submit', confirmarVenda);
+['#vQtd', '#vPreco', '#vData'].forEach(s => $(s).addEventListener('input', previewVenda));
+$('#formEditar').addEventListener('submit', salvarEdicao);
+$('#formSim').addEventListener('submit', venderPeloSimulado);
+$('#sPct').addEventListener('input', () => simular('pct'));
+$('#sPreco').addEventListener('input', () => simular('preco'));
+$('#formMov').addEventListener('submit', salvarMov);
+$('#formMeta').addEventListener('submit', salvarMeta);
+$('#gValor').addEventListener('input', previewMeta);
+$('#gRemover').addEventListener('click', () => definirMeta(0, 0));
+['#gTipoR', '#gTipoP'].forEach(s => $(s).addEventListener('change', previewMeta));
+$('#eExcluir').addEventListener('click', () => { if (excluir(editandoId)) $('#dlgEditar').close(); });
+['#fMes', '#fAtivo', '#fTipo', '#fStatus'].forEach(s => $(s).addEventListener('change', renderHistorico));
+
+$('#listaAbertas').addEventListener('input', e => { if (e.target.dataset.pa) atualizarPrecoAtual(e.target, false); });
+$('#listaAbertas').addEventListener('change', e => { if (e.target.dataset.pa) atualizarPrecoAtual(e.target, true); });
+$('#listaAbertas').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.pa) e.target.blur(); });
+
+$('#cfgGrid').addEventListener('change', e => { if (e.target.dataset.cfg) salvarConfig(e.target); });
+$('#btnPadroes').addEventListener('click', () => {
+  if (!confirm('Restaurar taxas, impostos e limites para os valores padrão?\n\nCapital inicial, data de início, meta do mês, ações cadastradas e operações não serão alterados.')) return;
+  state.settings = { ...DEFAULTS, capitalInicial: S().capitalInicial, dataInicio: S().dataInicio, metaMensal: S().metaMensal, metaPct: S().metaPct };
+  commit(); renderConfig(); toast('Configurações restauradas.');
+});
+
+$('#formInicio').addEventListener('submit', avancarInicio);
+$('#iVoltar').addEventListener('click', () => mostrarPassoInicio(1));
+// A primeira configuração não pode ser pulada: Esc não fecha e, se fechar mesmo assim, reabre
+$('#dlgInicio').addEventListener('cancel', e => e.preventDefault());
+$('#dlgInicio').addEventListener('close', () => { if (!state.inicioFeito) $('#dlgInicio').showModal(); });
+// Campo "adicionar ação": maiúsculas, e Enter adiciona em vez de enviar o formulário
+document.addEventListener('input', e => {
+  if (!e.target.matches('[data-novo-ativo]')) return;
+  const p = e.target.selectionStart; e.target.value = e.target.value.toUpperCase(); e.target.setSelectionRange(p, p);
+  e.target.removeAttribute('aria-invalid');
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target.matches('[data-novo-ativo]') || !e.target.value.trim()) return;
+  e.preventDefault(); adicionarAtivo(e.target.closest('.ativos-editor'));
+});
+$('#fileImport').addEventListener('change', e => { const f = e.target.files[0]; if (f) importarArquivo(f); });
+$('#tourProx').addEventListener('click', () => tourIdx < TOUR.length - 1 ? mostrarPassoTour(tourIdx + 1) : terminarTutorial());
+$('#tourVoltar').addEventListener('click', () => { if (tourIdx > 0) mostrarPassoTour(tourIdx - 1); });
+$('#tourPular').addEventListener('click', terminarTutorial);
+window.addEventListener('resize', posicionarTour);
+window.addEventListener('scroll', posicionarTour, { passive: true });
+document.addEventListener('keydown', e => {
+  if (tourIdx >= 0) {
+    if (e.key === 'Escape') terminarTutorial();
+    else if (e.key === 'ArrowRight') $('#tourProx').click();
+    else if (e.key === 'ArrowLeft') $('#tourVoltar').click();
+    return;
+  }
+  if (e.key && e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !document.querySelector('dialog[open]') && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); abrirNova(); }
+});
+window.addEventListener('storage', e => {
+  if (e.key === TEMA_KEY) return aplicarTema(e.newValue === 'claro');
+  if (e.key !== STORAGE_KEY) return;
+  state = carregar(); renderTudo();
+  if (abaAtual === 'config') renderConfig();
+  if (state.inicioFeito && $('#dlgInicio').open) $('#dlgInicio').close();
+});
+// Aba deixada aberta de um dia para o outro: atualiza "hoje", dias em aberto e CDI
+document.addEventListener('visibilitychange', () => { if (!document.hidden && diaRender !== hojeISO()) renderTudo(); });
+
+/* ================= Início ================= */
+state = carregar();
+aplicarTema(temaClaro());
+$('#nData').value = hojeISO();
+renderTudo();
+if (!state.inicioFeito) abrirInicio();
+else if (!state.tutorialVisto) iniciarTutorial();
+iniciarAuto();
+</script>
+</body>
+</html>

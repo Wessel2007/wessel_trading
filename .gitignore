@@ -1,0 +1,14 @@
+# Backups e exportações do sistema: contêm operações e valores pessoais, nunca devem ir para o repositório
+*backup*.json
+backup-trades-*.json
+operacoes-*.csv
+
+# Arquivos do sistema operacional e de editores
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# Ferramentas de IA (configurações e histórico locais)
+.claude/

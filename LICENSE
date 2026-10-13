@@ -1,0 +1,28 @@
+Copyright (c) 2026 Luiz Wessel. Todos os direitos reservados.
+
+Este software e o seu código-fonte são de propriedade de Luiz Wessel.
+
+O código está disponível neste repositório apenas para consulta. Não é
+concedida nenhuma licença de uso. Sem autorização prévia e por escrito do
+autor, é proibido:
+
+  - copiar, reproduzir ou replicar o software, no todo ou em parte;
+  - modificar o software ou criar obras derivadas dele;
+  - distribuir, publicar, sublicenciar ou vender o software ou cópias dele;
+  - usar o software, ou partes do seu código, em outros projetos ou produtos.
+
+Pedidos de autorização devem ser feitos diretamente ao autor.
+
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIA DE
+QUALQUER TIPO. O AUTOR NÃO SE RESPONSABILIZA POR PERDAS OU DANOS DECORRENTES
+DO SEU USO. OS VALORES DE TAXAS E DE IMPOSTO CALCULADOS SÃO ESTIMATIVAS E NÃO
+CONSTITUEM ORIENTAÇÃO FISCAL NEM RECOMENDAÇÃO DE INVESTIMENTO.
+
+-------------------------------------------------------------------------------
+
+Componentes de terceiros
+
+O arquivo chart.umd.min.js é a biblioteca Chart.js 4.4.1, de autoria dos
+colaboradores do Chart.js, distribuída sob a licença MIT
+(https://github.com/chartjs/Chart.js/blob/master/LICENSE.md). Ela não é
+abrangida pela reserva de direitos acima e continua sob a sua própria licença.

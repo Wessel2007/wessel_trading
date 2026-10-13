@@ -12,7 +12,7 @@ Roda inteiro no navegador, a partir de um único arquivo HTML. Não tem servidor
 
 ## Como usar
 
-1. Baixe o repositório (botão **Code → Download ZIP**) e extraia em uma pasta.
+1. Coloque `Diario de Trades.html` e `chart.umd.min.js` na mesma pasta.
 2. Abra o arquivo `Diario de Trades.html` em um navegador baseado em Chromium (Chrome, Edge, Opera, Opera GX, Brave).
 3. Na primeira abertura, informe o capital inicial e as ações que você opera. Um tutorial guiado apresenta o resto.
 
@@ -80,6 +80,14 @@ Este sistema não é recomendação de investimento.
 | `docs/` | Imagens deste README |
 
 Não há etapa de build nem dependências para instalar. Para alterar o sistema, edite o HTML e recarregue a página.
+
+## Direitos autorais
+
+© 2026 Luiz Wessel. Todos os direitos reservados.
+
+O código está aqui apenas para consulta. Não é permitido copiar, replicar, modificar, distribuir ou reutilizar este sistema, no todo ou em parte, sem autorização por escrito do autor. Os termos completos estão no arquivo [LICENSE](LICENSE).
+
+A biblioteca Chart.js, incluída no repositório, pertence aos seus autores e segue a licença MIT.
 
 ## Créditos
 

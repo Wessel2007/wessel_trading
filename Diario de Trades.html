@@ -715,9 +715,14 @@ const STORAGE_KEY = 'diarioTradesB3.v1';
 const DEFAULTS = Object.freeze({
   capitalInicial: 5000,
   dataInicio: '2026-10-12',
-  taxaDT: 0.023,        // % sobre (compra + venda)
-  taxaSwing: 0.030,     // %
-  corretagem: 0,        // R$ por ordem
+  // Custos por ordem (base: nota XP, autoatendimento). Cada item é arredondado em centavos antes de somar.
+  corretagemSwing: 4.90, // R$ por ordem executada
+  corretagemDT: 0,       // R$ por ordem (com RLP; sem RLP: 2,90)
+  impostoCorretagem: 9.65, // % ISS 5 + PIS 0,65 + COFINS 4, calculado por dentro
+  taxaOperacional: 5.9,  // % sobre corretagem + emolumentos + liquidação ("Outros" na nota)
+  taxaLiquidacao: 0.018, // % sobre o valor da ordem
+  emolumentos: 0.005,    // %
+  taxaRegistro: 0,       // %
   irDT: 20,             // %
   irSwing: 15,          // %
   irrfDT: 1,            // % sobre o lucro do dia em day trade
@@ -737,9 +742,13 @@ const CAMPOS_CFG = [
   { g: 'Conta', k: 'cdi', label: 'CDI anual', unit: '%', hint: 'Valor ilustrativo — atualize com a taxa atual.' },
   { g: 'Conta', k: 'metaMensal', label: 'Meta de lucro por mês (R$)', unit: 'R$', hint: 'Depois de custos e IR. Deixe 0 para não usar.' },
   { g: 'Conta', k: 'metaPct', label: 'Meta de lucro por mês (%)', unit: '%', hint: 'Do patrimônio no começo do mês. Preenchida, substitui a meta em reais.' },
-  { g: 'Custos', k: 'taxaDT', label: 'Taxa B3 day trade', unit: '%', hint: 'Sobre compra + venda. Padrão 0,023%.' },
-  { g: 'Custos', k: 'taxaSwing', label: 'Taxa B3 swing', unit: '%', hint: 'Sobre compra + venda. Padrão 0,030%.' },
-  { g: 'Custos', k: 'corretagem', label: 'Corretagem por ordem', unit: 'R$', hint: 'Cobrada na compra e na venda.' },
+  { g: 'Custos', k: 'corretagemSwing', label: 'Corretagem swing', unit: 'R$', hint: 'Por ordem executada (compra e venda). Padrão R$ 4,90.' },
+  { g: 'Custos', k: 'corretagemDT', label: 'Corretagem day trade', unit: 'R$', hint: 'Por ordem. Com RLP R$ 0,00; sem RLP R$ 2,90.' },
+  { g: 'Custos', k: 'impostoCorretagem', label: 'Impostos sobre corretagem', unit: '%', hint: 'ISS + PIS + COFINS, por dentro. Padrão 9,65%.' },
+  { g: 'Custos', k: 'taxaOperacional', label: 'Taxa operacional', unit: '%', hint: '"Outros" na nota: sobre corretagem + emolumentos + liquidação. Padrão 5,9%.' },
+  { g: 'Custos', k: 'taxaLiquidacao', label: 'Taxa de liquidação B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,018%.' },
+  { g: 'Custos', k: 'emolumentos', label: 'Emolumentos B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,005%.' },
+  { g: 'Custos', k: 'taxaRegistro', label: 'Taxa de registro B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0%.' },
   { g: 'Imposto de renda', k: 'irDT', label: 'IR day trade', unit: '%', hint: 'Sobre o lucro líquido do mês.' },
   { g: 'Imposto de renda', k: 'irSwing', label: 'IR swing', unit: '%', hint: 'Sobre o lucro do mês (se não isento).' },
   { g: 'Imposto de renda', k: 'irrfDT', label: 'IRRF day trade', unit: '%', hint: 'Retido pela corretora sobre o lucro do dia. Abatido da DARF.' },
@@ -935,13 +944,28 @@ const S = () => state.settings;
 function fechada(t) { return t.precoVenda != null && !!t.dataVenda; }
 function tipoOp(t) { return !fechada(t) ? null : (t.dataVenda === t.dataCompra ? 'DT' : 'SW'); }
 
+function r2(v) { return Math.round((v + Number.EPSILON) * 100) / 100; }
+// Custos de uma nota (uma ordem executada de valor v), item por item arredondado em centavos, como na nota da corretora
+function custoOrdem(v, tipo, s = S()) {
+  const liq = r2(v * s.taxaLiquidacao / 100), emol = r2(v * s.emolumentos / 100), reg = r2(v * s.taxaRegistro / 100);
+  const corr = r2(tipo === 'DT' ? s.corretagemDT : s.corretagemSwing);
+  const imp = r2(corr / (1 - s.impostoCorretagem / 100) - corr);
+  const outros = r2((corr + emol + liq) * s.taxaOperacional / 100);
+  return liq + emol + reg + corr + imp + outros;
+}
+// Custos da operação: a nota da venda inteira + a parte que lhe cabe da nota da compra (após venda parcial, parteCompra < 1)
+function custosOp(t, vv, tipo, s = S()) {
+  const parte = t.parteCompra ?? 1;
+  const compra = parte > 0 ? custoOrdem(t.qtd * t.precoCompra / parte, tipo, s) * parte : 0;
+  return compra + custoOrdem(vv, tipo, s);
+}
+
 function calcOp(t, s = S()) {
   const vc = t.qtd * t.precoCompra;
   if (fechada(t)) {
     const tipo = tipoOp(t);
     const vv = t.qtd * t.precoVenda;
-    const taxa = (tipo === 'DT' ? s.taxaDT : s.taxaSwing) / 100;
-    const custos = (vc + vv) * taxa + (1 + (t.parteCompra ?? 1)) * s.corretagem;
+    const custos = custosOp(t, vv, tipo, s);
     const res = vv - vc - custos;
     const irEst = tipo === 'DT' ? Math.max(0, res) * s.irDT / 100 : null;
     return { fechada: true, tipo, vc, vv, bruto: vv - vc, custos, res, pct: res / vc, irEst };
@@ -1327,7 +1351,7 @@ function linhasCalc(c) {
        <div class="tot"><span>Líquido estimado</span><span class="${cor(c.res - c.irEst)}">${brlSinal(c.res - c.irEst)}</span></div>`
     : `<div class="muted small"><span>IR de swing depende do total de vendas do mês (veja a aba Imposto).</span></div>`;
   return `<div><span>Resultado bruto</span><span class="${cor(c.bruto)}">${brlSinal(c.bruto)}</span></div>
-    <div><span>Custos (taxas B3 + corretagem)</span><span>−${brl(c.custos)}</span></div>
+    <div><span>Custos (taxas B3 + corretagem + impostos)</span><span>−${brl(c.custos)}</span></div>
     <div class="${c.tipo === 'DT' ? '' : 'tot'}"><span>Antes do IR</span><span class="${cor(c.res)}">${brlSinal(c.res)} <span class="small">(${pctSinal(c.pct)})</span></span></div>
     ${linhaIR}`;
 }
@@ -1463,7 +1487,7 @@ function renderPainel(st) {
   res += kpi(`Rendeu em ${fmtMes(ymAtual)}`, mAtual ? pctSinal(pctAtual) : '0,00%',
     `${mAtual ? brlSinal(mAtual.liquido) + ' líquido no mês. ' : 'Nenhuma venda neste mês ainda. '}CDI de um mês cheio ≈ ${pct(cdiMes)}.`,
     cor(pctAtual), mAtual && pctAtual < cdiMes ? 'warnc' : '', mAtual && pctAtual < cdiMes ? 'Abaixo do CDI' : '');
-  res += kpi('Custos totais pagos', brl(st.custos), 'Taxas da B3 + corretagem. Sai do seu bolso em todo trade.');
+  res += kpi('Custos totais pagos', brl(st.custos), 'Taxas da B3, corretagem e impostos da nota. Sai do seu bolso em todo trade.');
   res += kpi('IR total', brl(st.irTotal), 'Imposto devido nas apurações mensais (DARF).');
   res += kpi('Realizado antes do IR', brlSinal(st.somaRes), 'Vendas após custos, antes do imposto.', cor(st.somaRes));
 
@@ -1874,11 +1898,16 @@ function salvarConfig(input) {
 }
 
 /* ================= Simulador de venda ================= */
-// Preço de venda (hoje) que dá o resultado r depois dos custos
+// Menor preço de venda (hoje, em centavos) que dá pelo menos o resultado r depois dos custos
 function precoParaResultado(t, r) {
-  const s = S(), vc = t.qtd * t.precoCompra;
-  const taxa = (t.dataCompra === hojeISO() ? s.taxaDT : s.taxaSwing) / 100;
-  return (r + vc * (1 + taxa) + (1 + t.parteCompra) * s.corretagem) / (t.qtd * (1 - taxa));
+  const hoje = hojeISO(), res = p => calcOp({ ...t, precoVenda: p, dataVenda: hoje }).res;
+  // Estimativa: custos da venda quase proporcionais ao valor; o arredondamento é acertado centavo a centavo
+  const fixo = custosOp(t, 0, t.dataCompra === hoje ? 'DT' : 'SW');
+  const k = (custoOrdem(1e6, 'SW') - custoOrdem(0, 'SW')) / 1e6;
+  let c = Math.max(1, Math.ceil((r + t.qtd * t.precoCompra + fixo) / (t.qtd * (1 - k)) * 100));
+  while (c > 1 && res((c - 1) / 100) >= r - 1e-9) c--;
+  while (res(c / 100) < r - 1e-9) c++;
+  return c / 100;
 }
 
 // Operação sendo simulada: uma posição aberta ou a compra ainda não salva da tela "Nova operação"

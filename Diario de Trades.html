@@ -715,14 +715,18 @@ const STORAGE_KEY = 'diarioTradesB3.v1';
 const DEFAULTS = Object.freeze({
   capitalInicial: 5000,
   dataInicio: '2026-10-12',
-  // Custos por ordem (base: nota XP, autoatendimento). Cada item é arredondado em centavos antes de somar.
+  // Custos por ordem (base: tabela XP autoatendimento + tabela B3). Cada item é truncado em centavos antes de somar.
   corretagemSwing: 4.90, // R$ por ordem executada
   corretagemDT: 0,       // R$ por ordem (com RLP; sem RLP: 2,90)
   impostoCorretagem: 9.65, // % ISS 5 + PIS 0,65 + COFINS 4, calculado por dentro
-  taxaOperacional: 5.9,  // % sobre corretagem + emolumentos + liquidação ("Outros" na nota)
-  taxaLiquidacao: 0.018, // % sobre o valor da ordem
-  emolumentos: 0.005,    // %
-  taxaRegistro: 0,       // %
+  taxaOperacional: 5.9,  // % sobre corretagem + emolumentos + liquidação + transferência ("Outros" na nota)
+  emolumentosSwing: 0.005,    // % sobre o valor da ordem
+  liquidacaoSwing: 0.0224,    // %
+  transferenciaSwing: 0.0026, // % (transferência de ativos)
+  emolumentosDT: 0.005,       // %
+  liquidacaoDT: 0.018,        // %
+  transferenciaDT: 0,         // %
+  taxaRegistro: 0,            // %
   irDT: 20,             // %
   irSwing: 15,          // %
   irrfDT: 1,            // % sobre o lucro do dia em day trade
@@ -745,9 +749,13 @@ const CAMPOS_CFG = [
   { g: 'Custos', k: 'corretagemSwing', label: 'Corretagem swing', unit: 'R$', hint: 'Por ordem executada (compra e venda). Padrão R$ 4,90.' },
   { g: 'Custos', k: 'corretagemDT', label: 'Corretagem day trade', unit: 'R$', hint: 'Por ordem. Com RLP R$ 0,00; sem RLP R$ 2,90.' },
   { g: 'Custos', k: 'impostoCorretagem', label: 'Impostos sobre corretagem', unit: '%', hint: 'ISS + PIS + COFINS, por dentro. Padrão 9,65%.' },
-  { g: 'Custos', k: 'taxaOperacional', label: 'Taxa operacional', unit: '%', hint: '"Outros" na nota: sobre corretagem + emolumentos + liquidação. Padrão 5,9%.' },
-  { g: 'Custos', k: 'taxaLiquidacao', label: 'Taxa de liquidação B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,018%.' },
-  { g: 'Custos', k: 'emolumentos', label: 'Emolumentos B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,005%.' },
+  { g: 'Custos', k: 'taxaOperacional', label: 'Taxa operacional', unit: '%', hint: '"Outros" na nota: sobre corretagem + emolumentos + liquidação + transferência. Padrão 5,9%.' },
+  { g: 'Custos', k: 'emolumentosSwing', label: 'Emolumentos B3 swing', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,005%.' },
+  { g: 'Custos', k: 'liquidacaoSwing', label: 'Taxa de liquidação B3 swing', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,0224%.' },
+  { g: 'Custos', k: 'transferenciaSwing', label: 'Transferência de ativos B3 swing', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,0026%.' },
+  { g: 'Custos', k: 'emolumentosDT', label: 'Emolumentos B3 day trade', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,005%.' },
+  { g: 'Custos', k: 'liquidacaoDT', label: 'Taxa de liquidação B3 day trade', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0,018%.' },
+  { g: 'Custos', k: 'transferenciaDT', label: 'Transferência de ativos B3 day trade', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0%.' },
   { g: 'Custos', k: 'taxaRegistro', label: 'Taxa de registro B3', unit: '%', hint: 'Sobre o valor da ordem. Padrão 0%.' },
   { g: 'Imposto de renda', k: 'irDT', label: 'IR day trade', unit: '%', hint: 'Sobre o lucro líquido do mês.' },
   { g: 'Imposto de renda', k: 'irSwing', label: 'IR swing', unit: '%', hint: 'Sobre o lucro do mês (se não isento).' },
@@ -944,14 +952,19 @@ const S = () => state.settings;
 function fechada(t) { return t.precoVenda != null && !!t.dataVenda; }
 function tipoOp(t) { return !fechada(t) ? null : (t.dataVenda === t.dataCompra ? 'DT' : 'SW'); }
 
-function r2(v) { return Math.round((v + Number.EPSILON) * 100) / 100; }
-// Custos de uma nota (uma ordem executada de valor v), item por item arredondado em centavos, como na nota da corretora
+// Trunca em centavos (a folga absorve erro de ponto flutuante, ex.: 0,29 * 100 = 28,999...)
+function t2(v) { return Math.floor(v * 100 + 1e-6) / 100; }
+// Custos de uma nota (uma ordem executada de valor v), item por item truncado em centavos, como na nota da corretora
 function custoOrdem(v, tipo, s = S()) {
-  const liq = r2(v * s.taxaLiquidacao / 100), emol = r2(v * s.emolumentos / 100), reg = r2(v * s.taxaRegistro / 100);
-  const corr = r2(tipo === 'DT' ? s.corretagemDT : s.corretagemSwing);
-  const imp = r2(corr / (1 - s.impostoCorretagem / 100) - corr);
-  const outros = r2((corr + emol + liq) * s.taxaOperacional / 100);
-  return liq + emol + reg + corr + imp + outros;
+  const dt = tipo === 'DT';
+  const emol = t2(v * (dt ? s.emolumentosDT : s.emolumentosSwing) / 100);
+  const liq = t2(v * (dt ? s.liquidacaoDT : s.liquidacaoSwing) / 100);
+  const transf = t2(v * (dt ? s.transferenciaDT : s.transferenciaSwing) / 100);
+  const reg = t2(v * s.taxaRegistro / 100);
+  const corr = t2(dt ? s.corretagemDT : s.corretagemSwing);
+  const imp = t2(corr / (1 - s.impostoCorretagem / 100) - corr);
+  const outros = t2((corr + emol + liq + transf) * s.taxaOperacional / 100);
+  return emol + liq + transf + reg + corr + imp + outros;
 }
 // Custos da operação: a nota da venda inteira + a parte que lhe cabe da nota da compra (após venda parcial, parteCompra < 1)
 function custosOp(t, vv, tipo, s = S()) {
@@ -1902,8 +1915,8 @@ function salvarConfig(input) {
 function precoParaResultado(t, r) {
   const hoje = hojeISO(), res = p => calcOp({ ...t, precoVenda: p, dataVenda: hoje }).res;
   // Estimativa: custos da venda quase proporcionais ao valor; o arredondamento é acertado centavo a centavo
-  const fixo = custosOp(t, 0, t.dataCompra === hoje ? 'DT' : 'SW');
-  const k = (custoOrdem(1e6, 'SW') - custoOrdem(0, 'SW')) / 1e6;
+  const tipo = t.dataCompra === hoje ? 'DT' : 'SW', fixo = custosOp(t, 0, tipo);
+  const k = (custoOrdem(1e6, tipo) - custoOrdem(0, tipo)) / 1e6;
   let c = Math.max(1, Math.ceil((r + t.qtd * t.precoCompra + fixo) / (t.qtd * (1 - k)) * 100));
   while (c > 1 && res((c - 1) / 100) >= r - 1e-9) c--;
   while (res(c / 100) < r - 1e-9) c++;

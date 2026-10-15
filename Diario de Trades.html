@@ -611,6 +611,10 @@ input, select { transition: border-color .15s, background-color .15s; }
 <dialog id="dlgSim">
   <form method="dialog" id="formSim" autocomplete="off" novalidate>
     <div class="dlg-head"><h2 id="sTitulo">Simular venda</h2><div class="muted small" id="sSub"></div></div>
+    <div class="seg" role="radiogroup" aria-label="Tipo de operação" style="justify-self:start">
+      <input type="radio" name="sTipo" id="sTipoDT" value="DT"><label for="sTipoDT">Day trade</label>
+      <input type="radio" name="sTipo" id="sTipoSW" value="SW"><label for="sTipoSW">Swing</label>
+    </div>
     <div class="fgrid">
       <label>Valorização (%)<input id="sPct" inputmode="decimal" placeholder="2,00"><span class="hint">Negativo para simular queda.</span></label>
       <label>Preço de venda (R$)<input id="sPreco" inputmode="decimal" placeholder="0,00"><span class="hint">Preencha um e o outro é calculado.</span></label>
@@ -1911,11 +1915,24 @@ function salvarConfig(input) {
 }
 
 /* ================= Simulador de venda ================= */
-// Menor preço de venda (hoje, em centavos) que dá pelo menos o resultado r depois dos custos
-function precoParaResultado(t, r) {
-  const hoje = hojeISO(), res = p => calcOp({ ...t, precoVenda: p, dataVenda: hoje }).res;
+// Tipo escolhido no simulador ('DT' ou 'SW')
+function tipoSim() { return $('#sTipoDT').checked ? 'DT' : 'SW'; }
+// Venda simulada ao preço p: a data de venda só define o tipo (mesmo dia da compra = day trade)
+function vendaSim(t, p, tipo = tipoSim()) {
+  let dataVenda = t.dataCompra;
+  if (tipo === 'SW') {
+    const hoje = hojeISO();
+    if (hoje > t.dataCompra) dataVenda = hoje;
+    else { const [y, m, d] = t.dataCompra.split('-').map(Number); dataVenda = isoLocal(new Date(y, m - 1, d + 1)); }
+  }
+  return { ...t, precoVenda: p, dataVenda };
+}
+
+// Menor preço de venda (em centavos) que dá pelo menos o resultado r depois dos custos, no tipo escolhido
+function precoParaResultado(t, r, tipo = tipoSim()) {
+  const res = p => calcOp(vendaSim(t, p, tipo)).res;
   // Estimativa: custos da venda quase proporcionais ao valor; o arredondamento é acertado centavo a centavo
-  const tipo = t.dataCompra === hoje ? 'DT' : 'SW', fixo = custosOp(t, 0, tipo);
+  const fixo = custosOp(t, 0, tipo);
   const k = (custoOrdem(1e6, tipo) - custoOrdem(0, tipo)) / 1e6;
   let c = Math.max(1, Math.ceil((r + t.qtd * t.precoCompra + fixo) / (t.qtd * (1 - k)) * 100));
   while (c > 1 && res((c - 1) / 100) >= r - 1e-9) c--;
@@ -1952,6 +1969,8 @@ function mostrarSim(t) {
     + '<button class="btn sm" type="button" data-sim-alvo="limite" title="Preço em que a perda chega ao limite por operação">Limite de perda</button>';
   $('#sPct').value = ''; $('#sPreco').value = t.precoAtual != null ? num(t.precoAtual, 2) : '';
   $('#sPreco').removeAttribute('aria-invalid');
+  // Começa no tipo que a venda teria hoje; dá para trocar e comparar
+  $(t.dataCompra === hojeISO() ? '#sTipoDT' : '#sTipoSW').checked = true;
   simular('preco');
   $('#dlgSim').showModal();
   $('#sPct').focus();
@@ -1971,9 +1990,13 @@ function simular(origem) {
     pctEl.value = p > 0 ? num((p / t.precoCompra - 1) * 100, 2) : '';
   }
   if (!(p > 0)) { box.innerHTML = '<span class="muted small">Digite quantos % quer ganhar (ou aceita perder) para ver o preço, ou o preço para ver quantos % dá.</span>'; return; }
-  const c = calcOp({ ...t, precoVenda: p, dataVenda: hojeISO() }), lim = limiteOpReais();
+  const c = calcOp(vendaSim(t, p)), lim = limiteOpReais(), hoje = hojeISO();
+  // Avisa quando o tipo simulado não é o que a venda teria de verdade hoje
+  const aviso = c.tipo === 'DT' && t.dataCompra < hoje ? `Hipotético: a compra foi em ${fmtData(t.dataCompra)}, então vender hoje seria swing.`
+    : c.tipo === 'SW' && t.dataCompra >= hoje ? 'Swing: vendendo a partir de amanhã.' : '';
   box.innerHTML = `<div><span>Vendendo a</span><b>${brl(p)} <span class="${cor(p - t.precoCompra)}">(${pctSinal(p / t.precoCompra - 1)})</span></b></div>
-    <div><span>Tipo, se vender hoje</span><b>${c.tipo === 'DT' ? 'Day trade' : 'Swing'}</b></div>${linhasCalc(c)}`
+    <div><span>Tipo simulado</span><b>${c.tipo === 'DT' ? 'Day trade' : 'Swing'}</b></div>`
+    + (aviso ? `<div class="muted small"><span>${aviso}</span></div>` : '') + linhasCalc(c)
     + (c.res < -lim - 1e-9 ? `<div class="neg small"><span>Passa do limite de perda por operação (${brl(lim)}).</span></div>` : '');
 }
 
@@ -2349,6 +2372,7 @@ $('#formEditar').addEventListener('submit', salvarEdicao);
 $('#formSim').addEventListener('submit', venderPeloSimulado);
 $('#sPct').addEventListener('input', () => simular('pct'));
 $('#sPreco').addEventListener('input', () => simular('preco'));
+$$('[name="sTipo"]').forEach(r => r.addEventListener('change', () => simular('preco')));
 $('#formMov').addEventListener('submit', salvarMov);
 $('#formMeta').addEventListener('submit', salvarMeta);
 $('#gValor').addEventListener('input', previewMeta);
